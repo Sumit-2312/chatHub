@@ -1,0 +1,21 @@
+{
+  "name": "@repo/database",
+  "version": "1.0.0",
+  "main": "./dist/db.js",
+  "types": "./dist/db.d.ts",
+  "scripts": {
+    "build": "npx tsc -b",
+    "dev": "npx tsc -b"
+  },
+  "exports": {
+    "./db":"./dist/db.js",
+    "./types":"./dist/types/route.js"
+  },
+  "dependencies": {
+    "mongoose": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.96",
+    "typescript": "^5.4.5"
+  }
+}
