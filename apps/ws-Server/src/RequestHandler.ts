@@ -1,3 +1,4 @@
+import { generate } from "./AIRespose";
 import { ClientInterface } from "./index";
 import { publisher } from "./Redis";
 
@@ -65,7 +66,7 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 }
                 const query = data.query;
                 // const response --> get the response from AI
-                const response = "This is a mock AI response for query : " + query;
+                const response = await generate(query);
 
                 await publisher.publish("chatRoom",JSON.stringify({
                     sender:"AI",
