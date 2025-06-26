@@ -1,5 +1,5 @@
 import { ClientInterface } from "./index";
-import { publisher, subscriber } from "./Redis";
+import { publisher } from "./Redis";
 
 export default async function Handler(data:any,userId:string,clients:ClientInterface[]){
 
@@ -52,6 +52,27 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     roomID: data.roomID,
                     message: data.message,
                     userId: userId
+                }));
+
+            }
+
+            if(data.type === "AiChat" && data.roomID && data.query && data.isAI){
+                console.log("Reached in AI chat handler");
+                               
+                if(!data.isAI){
+                    ws.send(JSON.stringify({type:"error",message:"You are not allowed to use AI chat"}));
+                    return;
+                }
+                const query = data.query;
+                // const response --> get the response from AI
+                const response = "This is a mock AI response for query : " + query;
+
+                await publisher.publish("chatRoom",JSON.stringify({
+                    sender:"AI",
+                    type:"AiChat",
+                    roomID : data.roomID,
+                    message : response,
+                    query : query
                 }));
 
             }

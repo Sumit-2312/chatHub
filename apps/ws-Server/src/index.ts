@@ -44,7 +44,7 @@ subscriber.subscribe("chatRoom",(message)=>{
   const data = JSON.parse(message);
   const roomId = data.roomID;
   const messageContent = data.message;
-  const senderId = data.userId;
+  const senderId = data.userId || data.sender;
   clients.forEach((client)=>{
     if( client.rooms.includes(roomId) && client.ws.readyState === WebSocket.OPEN){
       client.ws.send(JSON.stringify({
@@ -67,6 +67,7 @@ server.on("connection", async (ws: WebSocket, req: any) => {
 
 
   // ======================== JWT Authentication ====================
+
     let authentic = false;
     try{
         authentic = await isAuthenticated(req);
@@ -77,7 +78,6 @@ server.on("connection", async (ws: WebSocket, req: any) => {
             return;
     }
 
-    
     if(!authentic) {
       ws.close(1008, "Authentication failed");
       console.error("Authentication failed for a WebSocket connection");
@@ -90,17 +90,14 @@ server.on("connection", async (ws: WebSocket, req: any) => {
 
     let userId : string  = req.userId;
     let user = req.user;
-
-
-
-
-  // Add to clients list
-  clients.push({ userId, ws, rooms: [] });
-  console.log(`User ${userId} connected`);
+    // Add to clients list
+    clients.push({ userId, ws, rooms: [] });
+    console.log(`User ${userId} connected`);
 
 
 
   // ======================= Message Handler ========================
+
   ws.on("message", async (rawData) => {
 
 
@@ -119,19 +116,15 @@ server.on("connection", async (ws: WebSocket, req: any) => {
 
   });
 
-
-
-
-
-
-
   // ======================= Close Handler ==========================
+
   ws.on("close", () => {
     clients = clients.filter((c) => c.ws !== ws);
     console.log(`User ${userId} disconnected`);
   });
 
   // ======================= Error Handler ==========================
+
   ws.on("error", (err) => {
     console.error(`Error from user ${userId}:`, err);
   });

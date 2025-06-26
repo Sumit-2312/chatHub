@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export default async function isAuthenticated(req:any){
+
     const token = new URLSearchParams(req.url.split("?")[1]).get("token");
     if(!token){
         console.error("No token provided in the request");
