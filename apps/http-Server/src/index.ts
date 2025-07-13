@@ -6,6 +6,7 @@ import { verifyToken } from "./middleware";
 import userRouter from "./routes/user/route";
 import roomRouter from "./routes/room/route";
 import cors from "cors";
+import chatRouter from "./routes/chat/route";
 dotenv.config();
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/user',verifyToken,userRouter); // working properly
 //@ts-ignore
 app.use('/room',verifyToken,roomRouter);
 //@ts-ignore
+app.use('/chat',verifyToken,chatRouter);
 
 const PORT = process.env.PORT || 5000;
 

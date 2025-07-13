@@ -112,7 +112,7 @@ server.on("connection", async (ws: WebSocket, req: any) => {
     } catch (err) {
 
       console.error("Message parse error:", err);
-      ws.send(JSON.stringify({ type: "error", message: "Invalid message format" }));
+      ws.send(JSON.stringify({ type: "error", message: "error from index.ts file in catch block format",err:err }));
 
     }
 

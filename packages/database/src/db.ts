@@ -57,11 +57,6 @@ const baseMessageSchema = new Schema(
       ref: "Room",
       required: true,
     },
-    senderId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     messageType: {
       type: String,
       enum: ["text", "image", "file"],
@@ -76,33 +71,28 @@ const baseMessageSchema = new Schema(
 );  
 
 // Base message model
-const Message = mongoose.models.Message || model("Message", baseMessageSchema);
+const Message = (mongoose.models.Message || model("Message", baseMessageSchema)) as mongoose.Model<any>;
 
 
 
 
 // -------------------- Text Message --------------------
 const textSchema = new Schema({
-  blocks: [
-    {
-      type: {
-        type: String,
-        enum: ["text", "code"],
-        required: true,
+  content: { type: String, required: true },
+  sender: {
+    type: Schema.Types.Mixed,
+    required: true,
+    validate: {
+      validator: function (v: any) {
+        // Accepts either a valid ObjectId or the string "AI"
+        return (
+          mongoose.Types.ObjectId.isValid(v) ||
+          (typeof v === "string" && v === "AI")
+        );
       },
-      content: {
-        type: String,
-        required: true,
-      },
-      language: {
-        type: String,
-        enum: ["javascript", "python", "cpp", "java", "other"],
-        required: function (this: any) {
-          return this.type === "code";
-        },
-      },
+      message: "Sender must be a valid user ObjectId or the string 'AI'",
     },
-  ],
+  },
 });
 
 const TextMessage =
@@ -110,18 +100,6 @@ const TextMessage =
 
 
 
-
-// -------------------- Image Message --------------------
-const imageSchema = new Schema({
-  url: {
-    type: String,
-    required: true,
-  },
-  caption: String,
-});
-
-const ImageMessage =
-  mongoose.models.ImageMessage || Message.discriminator("image", imageSchema);
 
 
 
@@ -131,6 +109,9 @@ const fileSchema = new Schema({
   url: {
     type: String,
     required: true,
+  },
+   sender: {
+    type: Schema.Types.ObjectId, required: true, ref: "User"
   },
   filename: String,
   filetype: String,
@@ -149,6 +130,5 @@ export {
   RoomModel,
   Message,
   TextMessage,
-  ImageMessage,
   FileMessage,
 };

@@ -10,7 +10,7 @@ if (!gemini_api_key) {
 const genAI = new GoogleGenAI({apiKey: gemini_api_key});
 
 export const generate = async (query: string): Promise<string> => {
-  const prompt = `Answer the following question concisely in one line, without code blocks, markdown, or extra formatting. If you don't know the answer, say "I don't know". Question: ${query}`;
+
 
   try {
     
@@ -19,19 +19,12 @@ export const generate = async (query: string): Promise<string> => {
         contents: [
             {
             role: "user",
-            parts: [{ text: `Give your response in a structured JSON format with explanation and code blocks if asked for. 
-            Each block should either be a text explanation or a code snippet with its language.
-              Example format:
-              [
-                { "type": "text", "content": "Here is how you reverse a string in Python:" },
-                { "type": "code", "content": "s = 'hello'\nprint(s[::-1])", "language": "python" },
-                { "type": "text", "content": "This uses Python slicing syntax." }
-              ]
+            parts: [{ text: `You are a senior web developer with expertise in production ready code and best practices.You don't miss any edge cases and always give the optimal and modularized code. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses. Use proper markdown formatting for code blocks. 
               Question is : ${query}` }],
             }
         ],
         config: {
-        systemInstruction: "You are a helpful assistant proficeint in human psychology and coding languages",
+        systemInstruction: "You are a senior web developer with expertise in production ready code and best practices. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses.",
         },
     });
     console.log(response.text);

@@ -18,9 +18,6 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
     }
 
 
-
-
-
     try{
 
               // JOIN ROOM  --> working properly
@@ -59,53 +56,72 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 // we need to chek the type of message and store accordingly
                 // if the type is image and file then we will first store the image/file in cloudinary and store the url in the database
 
-                if(data.messageType == 'text'){
-                    const {message, roomID} = data;
-                const newMessage = await TextMessage.create({
-                    ChatRoomId: roomID,
-                    senderId: sender.userId,
-                    messageType: "text",
-                    blocks: [
-                        {
-                            type: "text",
-                            content: message
-                        }
-                    ]
-                });
-
-                    console.log("Message stored in database:", newMessage);
-                }
 
 
                 // then send the message to publisher to broadcast to all connected clients
-             await  publisher.publish("chatRoom",JSON.stringify({
-                    type:"chat",
-                    roomID: data.roomID,
-                    message: data.message,
-                    userId: userId
-                }));
+                if( data.messageType == 'text' ){
+
+                    const {message, roomID} = data;
+
+                    const newMessage = await TextMessage.create({
+                        ChatRoomId: roomID,
+                        sender: userId,
+                        messageType: "text",
+                        content : message
+                    });
+
+                    console.log("Message stored in database:", newMessage);
+                    await publisher.publish("chatRoom", JSON.stringify({
+                        type: "chat",
+                        messageType: data.messageType,
+                        roomID: data.roomID,
+                        message: data.message,
+                        sender: userId
+                    }));
+                }
+
+                else if( data.messageType == 'image' || data.messageType == 'file' ){
+                    await publisher.publish("chatRoom", JSON.stringify({
+                        type: 'chat',
+                        messageType: data.messageType,
+                        roomID: data.roomID,
+                        url: data.url,
+                        sender: userId
+                    }));
+
+                }
 
             }
+            
+            if (data.type === "AiChat" && data.roomID && data.query ) {
 
-            if(data.type === "AiChat" && data.roomID && data.query && data.isAI){
-                console.log("Reached in AI chat handler");
-                               
-                if(!data.isAI){
-                    ws.send(JSON.stringify({type:"error",message:"You are not allowed to use AI chat"}));
+                const sender = clients.find((c) => c.userId === userId);
+                if (!sender || !sender.rooms.includes(data.roomID)) {
+                    ws.send(JSON.stringify({ type: "error", message: "You are not in this room" }));
                     return;
                 }
-                const query = data.query;
-                // const response --> get the response from AI
-                const response = await generate(query);
-
-                await publisher.publish("chatRoom",JSON.stringify({
-                    sender:"AI",
-                    type:"AiChat",
-                    roomID : data.roomID,
-                    message : response,
-                    query : query
-                }));
-
+                // Generate AI response
+                const aiResponse = await generate(data.query);
+                if (!aiResponse) {
+                    ws.send(JSON.stringify({ type: "error", message: "AI response generation failed" }));
+                    return;
+                }
+                // Store AI response in the database
+                const newMessage = await TextMessage.create({   
+                    ChatRoomId: data.roomID,
+                    sender: "AI", // Assuming AI responses are identified by "AI"
+                    messageType: "text",
+                    content: aiResponse
+                });
+                console.log("AI Response stored in database:", newMessage);
+                // Publish AI response to the chat room
+                await publisher.publish("chatRoom", JSON.stringify({
+                    type: "AiChat",
+                    messageType: "text",
+                    roomID: data.roomID,
+                    message: aiResponse,
+                    sender: "AI"
+                }));   
             }
 
     }

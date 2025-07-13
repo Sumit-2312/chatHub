@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/middleware.ts","./src/routes/auth/route.ts","./src/routes/room/route.ts","./src/routes/user/route.ts"],"version":"5.8.2"}
+{"root":["./src/index.ts","./src/middleware.ts","./src/routes/auth/route.ts","./src/routes/chat/route.ts","./src/routes/room/route.ts","./src/routes/user/route.ts","./src/utils/cloudinary/route.ts","./src/utils/multer/detecttype.ts","./src/utils/multer/filefilter.ts","./src/utils/multer/storage.ts"],"version":"5.8.2"}
