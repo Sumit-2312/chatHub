@@ -58,13 +58,13 @@ subscriber.subscribe("chatRoom",(message)=>{
 })
 
 
-
+// the above part is shared with all the clients . global scope
 
 
 server.on("connection", async (ws: WebSocket, req: any) => {
 
 
-
+// the below part is specific to each client connection
 
   // ======================== JWT Authentication ====================
 
@@ -105,7 +105,9 @@ server.on("connection", async (ws: WebSocket, req: any) => {
 
       const data = JSON.parse(rawData.toString());
       console.log("Received message:", data);
-      Handler(data, userId, clients);
+      // on message is triggered when the client sends a message
+      // we broadcast the message to all the clients with handler function
+      await Handler(data, userId, clients);  // userId here indicates the user who recieves the message
 
     } catch (err) {
 

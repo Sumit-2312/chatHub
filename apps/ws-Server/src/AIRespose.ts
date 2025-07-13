@@ -19,7 +19,15 @@ export const generate = async (query: string): Promise<string> => {
         contents: [
             {
             role: "user",
-            parts: [{ text: `Be consice and return the response in simple text unless asked to generate a code. If you are asked to generate a code respond back with stringified json having code,language,title and make sure to add all the tags and elements.  Question is : ${query}` }],
+            parts: [{ text: `Give your response in a structured JSON format with explanation and code blocks if asked for. 
+            Each block should either be a text explanation or a code snippet with its language.
+              Example format:
+              [
+                { "type": "text", "content": "Here is how you reverse a string in Python:" },
+                { "type": "code", "content": "s = 'hello'\nprint(s[::-1])", "language": "python" },
+                { "type": "text", "content": "This uses Python slicing syntax." }
+              ]
+              Question is : ${query}` }],
             }
         ],
         config: {

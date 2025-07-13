@@ -12,7 +12,7 @@ export interface IRoom extends Document {
   name: string;
   members: Types.ObjectId[];
   isGroup: boolean;
-  Admin: string;
+  Admin: Types.ObjectId;
 }
 
 export interface IMessage extends Document {

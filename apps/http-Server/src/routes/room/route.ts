@@ -30,7 +30,6 @@ roomRouter.post("/changeRoomName", async (req: any, res: any) => {
   }
 });
 
-
 //  Create Room (Set creator as Admin)
 roomRouter.post("/createRoom", async (req: any, res: any) => {
   try {
@@ -82,7 +81,6 @@ roomRouter.post("/deleteRoom", async (req: any, res: any) => {
     return res.status(500).json({ message: "Internal Error", err });
   }
 });
-
 
 roomRouter.post("/deleteMember", async (req: any, res:any) => {
   try {

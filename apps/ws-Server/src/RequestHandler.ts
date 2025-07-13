@@ -1,8 +1,11 @@
+import { Message, TextMessage } from "@repo/database/db";
 import { generate } from "./AIRespose";
 import { ClientInterface } from "./index";
 import { publisher } from "./Redis";
 
 export default async function Handler(data:any,userId:string,clients:ClientInterface[]){
+
+
 
     const ws = clients.find((client)=>{
         if( client.userId === userId){
@@ -13,6 +16,10 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
     if( !ws || ws.readyState !== WebSocket.OPEN ) {
         throw new Error("WebSocket is not open or client not found");
     }
+
+
+
+
 
     try{
 
@@ -40,7 +47,7 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
             // SEND MESSAGE --> Working properly
             if (data.type === "chat" && data.roomID && data.message) {
 
-                
+                // use can only send the text message not the code
                 const sender = clients.find((c) => c.userId === userId);
 
                 if (!sender || !sender.rooms.includes(data.roomID)) {
@@ -48,7 +55,30 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 return;
                 }
 
-             await   publisher.publish("chatRoom",JSON.stringify({
+                // use can send the text, image, file message
+                // we need to chek the type of message and store accordingly
+                // if the type is image and file then we will first store the image/file in cloudinary and store the url in the database
+
+                if(data.messageType == 'text'){
+                    const {message, roomID} = data;
+                const newMessage = await TextMessage.create({
+                    ChatRoomId: roomID,
+                    senderId: sender.userId,
+                    messageType: "text",
+                    blocks: [
+                        {
+                            type: "text",
+                            content: message
+                        }
+                    ]
+                });
+
+                    console.log("Message stored in database:", newMessage);
+                }
+
+
+                // then send the message to publisher to broadcast to all connected clients
+             await  publisher.publish("chatRoom",JSON.stringify({
                     type:"chat",
                     roomID: data.roomID,
                     message: data.message,
@@ -78,11 +108,10 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
 
             }
 
-
     }
+
+
     catch(err:any){
         throw new Error(`Error handling message: ${err || err.message}`);
     }
-
-
 }

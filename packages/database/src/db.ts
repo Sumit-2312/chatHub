@@ -1,9 +1,12 @@
 import mongoose, { Schema, model } from "mongoose";
-import {ICodeSnippet, IMessage, IRoom, IUser} from "./types/route";
+import { IRoom, IUser } from "./types/route";
 
 
 
 
+
+
+// -------------------- User Schema --------------------
 const UserSchema = new Schema<IUser>(
   {
     username: { type: String, required: true },
@@ -12,63 +15,140 @@ const UserSchema = new Schema<IUser>(
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
     rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],
   },
-  { timestamps: true } // this will automatically tells mongoose to maintain the createdAt and updatedAt values
+  { timestamps: true }
 );
 
- const UserModel: mongoose.Model<IUser> = mongoose.models.User || mongoose.model("User", UserSchema);
-
- export { UserModel };
-
+const UserModel: mongoose.Model<IUser> =
+  mongoose.models.User || model<IUser>("User", UserSchema);
 
 
+  
+  // when we do model("User", UserSchema) it creates a new collection in the database with the name "users"(plural of User)
+  // You can use the model of collection "users" by using mongoose.models.User
 
+
+
+
+
+
+// -------------------- Room Schema --------------------
 const RoomSchema = new Schema<IRoom>(
   {
     name: { type: String },
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
     isGroup: { type: Boolean, default: false },
-    Admin: {type:String, ref:"User" } // ref will let us use the populate property
+    Admin: { type: Schema.Types.ObjectId, ref: "User" }, // ✅ Fixed type
   },
   { timestamps: true }
 );
 
-export const RoomModel : mongoose.Model<IRoom>= mongoose.models.Room || model<IRoom>("Room", RoomSchema);
+const RoomModel: mongoose.Model<IRoom> =
+  mongoose.models.Room || model<IRoom>("Room", RoomSchema);
 
 
 
 
 
-const MessageSchema = new Schema<IMessage>(
+// -------------------- Base Message Schema --------------------
+const baseMessageSchema = new Schema(
   {
-    sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    room: { type: Schema.Types.ObjectId, ref: "Room", required: true },
-    content: { type: String, required: true },
-    isAI: { type: Boolean, default: false },
+    ChatRoomId: {
+      type: Schema.Types.ObjectId,
+      ref: "Room",
+      required: true,
+    },
+    senderId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     messageType: {
       type: String,
-      enum: ["text", "code", "file"],
-      default: "text",
+      enum: ["text", "image", "file"],
+      required: true,
     },
-    codeSnippet: { type: Schema.Types.ObjectId, ref: "CodeSnippet" },
   },
-  { timestamps: true }
-);
- const MessageModel: mongoose.Model<IMessage> = mongoose.models.Message || model<IMessage>("Message", MessageSchema);
- export {MessageModel};
-
-
-
-
-
-
-const CodeSnippetSchema = new Schema<ICodeSnippet>(
   {
-    title: { type: String },
-    language: { type: String, required: true },
-    code: { type: String, required: true },
-    executedOutput: { type: String },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    discriminatorKey: "messageType",
+    collection: "messages",
+    timestamps: true, 
+  }
+);  
+
+// Base message model
+const Message = mongoose.models.Message || model("Message", baseMessageSchema);
+
+
+
+
+// -------------------- Text Message --------------------
+const textSchema = new Schema({
+  blocks: [
+    {
+      type: {
+        type: String,
+        enum: ["text", "code"],
+        required: true,
+      },
+      content: {
+        type: String,
+        required: true,
+      },
+      language: {
+        type: String,
+        enum: ["javascript", "python", "cpp", "java", "other"],
+        required: function (this: any) {
+          return this.type === "code";
+        },
+      },
+    },
+  ],
+});
+
+const TextMessage =
+  mongoose.models.TextMessage || Message.discriminator("text", textSchema);
+
+
+
+
+// -------------------- Image Message --------------------
+const imageSchema = new Schema({
+  url: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
-export const CodeSnippetModel: mongoose.Model<ICodeSnippet> =  mongoose.models.CodeSnippet || model<ICodeSnippet>("CodeSnippet", CodeSnippetSchema);  
+  caption: String,
+});
+
+const ImageMessage =
+  mongoose.models.ImageMessage || Message.discriminator("image", imageSchema);
+
+
+
+
+// -------------------- File Message --------------------
+const fileSchema = new Schema({
+  url: {
+    type: String,
+    required: true,
+  },
+  filename: String,
+  filetype: String,
+  size: Number,
+});
+
+const FileMessage =
+  mongoose.models.FileMessage || Message.discriminator("file", fileSchema);
+
+
+
+
+// -------------------- Exports --------------------
+export {
+  UserModel,
+  RoomModel,
+  Message,
+  TextMessage,
+  ImageMessage,
+  FileMessage,
+};
