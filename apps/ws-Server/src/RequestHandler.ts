@@ -80,7 +80,7 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     }));
                 }
 
-                else if( data.messageType == 'image' || data.messageType == 'file' ){
+                else if( data.messageType == 'image' || data.messageType == 'file' ){                    
                     await publisher.publish("chatRoom", JSON.stringify({
                         type: 'chat',
                         messageType: data.messageType,
