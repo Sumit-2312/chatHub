@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Signup: React.FC = () => {
+
+
+   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,16 +29,17 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('https://localhost/auth/signup', {
-        name: formData.name,
+      const response = await axios.post('http://localhost:5000/auth/signup', {
+        username: formData.name,
         email: formData.email,
         password: formData.password,
       });
 
-      alert('Signup successful!');
+      toast.success(response.data.message);
       console.log('Response:', response.data);
+      navigate('/login');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Signup failed');
+      toast.error(err.response.data.message);
     }
   };
 

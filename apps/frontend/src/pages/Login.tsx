@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('https://localhost/auth/login', {
+      const response = await axios.post('http://localhost:5000/auth/login', {
         email,
         password,
       });
 
       console.log('Login successful:', response.data);
-      localStorage.setItem('token',response.data.token);
-      console.log( "token in localstroage: " , localStorage.getItem("token"))
+      localStorage.setItem('token', response.data.token);
+      console.log("token in localStorage: ", localStorage.getItem("token"));
+      
+      // Show success toast
+      toast.success('Successfully logged in!');
+      
+      // Navigate to dashboard after successful login
+      navigate('/dashboard');
       
     } catch (error: any) {
       console.error('Login failed:', error?.response?.data || error.message);
-      alert('Login failed');
+      
+      // Show error toast
+      toast.error(error?.response?.data?.message || 'Login failed. Please try again.');
     }
   };
-
-
 
 
   return (

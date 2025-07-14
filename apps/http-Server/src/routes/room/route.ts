@@ -36,12 +36,22 @@ roomRouter.post("/createRoom", async (req: any, res: any) => {
     const userId = req.userId;
     const { name } = req.body;
 
+    if(!name){
+      return res.status(400).json({ message: "Room name is required" });
+    }
+
     const newRoom = await RoomModel.create({
         name,
         members:[userId],
         isGroup: false,
         Admin: userId
     })
+    const user = await UserModel.findByIdAndUpdate(
+      userId,{
+        $push: { rooms: newRoom._id }
+      }
+    );
+
  
     return res.status(201).json({ message: "Room created", room: newRoom });
   } catch (err) {

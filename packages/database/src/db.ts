@@ -12,8 +12,13 @@ const UserSchema = new Schema<IUser>(
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],
+    friends: [{ type: Schema.Types.ObjectId, ref: "User" }], //  friends
+    rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],  // chats
+    archived: [{type:Schema.Types.ObjectId, ref: "Room"}], // archived chats
+    blocked:[{type:Schema.Types.ObjectId, ref: "User"}], // blocked users
+    favourites: [{ type: Schema.Types.ObjectId, ref: "Room" }], // favorite chats
+    profilePicture: { type: String, default: "" }, // URL to the profile picture
+    discription: { type: String, default: "" }, // User description
   },
   { timestamps: true }
 );

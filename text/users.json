@@ -1,0 +1,92 @@
+[
+  {
+    "_id": "2d665cb47144f9f84057aabb",
+    "username": "test1",
+    "email": "test1@gmail.com",
+    "password": "hashedpassword123",
+    "friends": [],
+    "rooms": [
+      "ff19776324b9f61486880510"
+    ],
+    "archieves": [],
+    "blocked": [],
+    "favorites": [],
+    "profilePicture": "",
+    "discription": "",
+    "isOnline": false,
+    "createdAt": "2025-07-14T07:21:15.109391",
+    "updatedAt": "2025-07-14T07:21:15.109403"
+  },
+  {
+    "_id": "728a362dc58ec4bd54d6e8e5",
+    "username": "test2",
+    "email": "test2@gmail.com",
+    "password": "hashedpassword123",
+    "friends": [],
+    "rooms": [
+      "ff19776324b9f61486880510"
+    ],
+    "archieves": [],
+    "blocked": [],
+    "favorites": [],
+    "profilePicture": "",
+    "discription": "",
+    "isOnline": false,
+    "createdAt": "2025-07-14T07:21:15.109419",
+    "updatedAt": "2025-07-14T07:21:15.109422"
+  },
+  {
+    "_id": "87855dd191bb65bb3b12e9bf",
+    "username": "test3",
+    "email": "test3@gmail.com",
+    "password": "hashedpassword123",
+    "friends": [],
+    "rooms": [
+      "ff19776324b9f61486880510"
+    ],
+    "archieves": [],
+    "blocked": [],
+    "favorites": [],
+    "profilePicture": "",
+    "discription": "",
+    "isOnline": false,
+    "createdAt": "2025-07-14T07:21:15.109437",
+    "updatedAt": "2025-07-14T07:21:15.109439"
+  },
+  {
+    "_id": "df2617d0ab2a415062176762",
+    "username": "test4",
+    "email": "test4@gmail.com",
+    "password": "hashedpassword123",
+    "friends": [],
+    "rooms": [
+      "ff19776324b9f61486880510"
+    ],
+    "archieves": [],
+    "blocked": [],
+    "favorites": [],
+    "profilePicture": "",
+    "discription": "",
+    "isOnline": false,
+    "createdAt": "2025-07-14T07:21:15.109454",
+    "updatedAt": "2025-07-14T07:21:15.109457"
+  },
+  {
+    "_id": "8bd5b3f0061aab1ea837d767",
+    "username": "test5",
+    "email": "test5@gmail.com",
+    "password": "hashedpassword123",
+    "friends": [],
+    "rooms": [
+      "ff19776324b9f61486880510"
+    ],
+    "archieves": [],
+    "blocked": [],
+    "favorites": [],
+    "profilePicture": "",
+    "discription": "",
+    "isOnline": false,
+    "createdAt": "2025-07-14T07:21:15.109475",
+    "updatedAt": "2025-07-14T07:21:15.109478"
+  }
+]

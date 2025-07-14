@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "ff19776324b9f61486880510",
+    "name": "room 1",
+    "members": [
+      "2d665cb47144f9f84057aabb",
+      "728a362dc58ec4bd54d6e8e5",
+      "87855dd191bb65bb3b12e9bf",
+      "df2617d0ab2a415062176762",
+      "8bd5b3f0061aab1ea837d767"
+    ],
+    "isGroup": true,
+    "Admin": "2d665cb47144f9f84057aabb",
+    "createdAt": "2025-07-14T07:21:15.109616",
+    "updatedAt": "2025-07-14T07:21:15.109620"
+  }
+]
