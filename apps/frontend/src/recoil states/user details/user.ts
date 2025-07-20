@@ -8,11 +8,11 @@ export const useDetalis = atom({
         email: "",
         profilePicture: "", 
         friends: [{
-            id: "",
-            username:"",
-            email: "",
+            id: "1",
+            username:"Sumit",
+            email: "sumitsongh@gmail.com",
             profilePicture: "",
-            discription: ""
+            discription: "Hi i am using ChatHub!"
         }],
         rooms: [{
             id: "",

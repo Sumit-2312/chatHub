@@ -1,48 +1,76 @@
-import React from "react";
+import { FaCircle } from "react-icons/fa";
+import { RiProfileFill } from "react-icons/ri";
+import { useRecoilState } from "recoil";
+import selectedChat from "../recoil states/chat/selectedChat";
+import { BsThreeDots } from "react-icons/bs";
+import { useState } from "react";
 
-interface ChatListItemProps {
+interface Props {
   name: string;
-  message: string;
-  time: string;
-  unreadCount: number;
-  profileUrl: string;
+  email?: string;
+  profilePicture?: string;
+  description?: string;
+  isOnline?: boolean;
+  category: string
 }
 
-const ChatListItem: React.FC<ChatListItemProps> = ({
-  name,
-  message,
-  time,
-  unreadCount,
-  profileUrl,
-}:ChatListItemProps) => {
+
+function ChatListItem({ name,category, email, profilePicture, description, isOnline }: Props) {
+
+
+  const [SelectedChat,setSelectedChat] = useRecoilState(selectedChat);
+  const [clicked,setClicked] = useState(false);
+
+
   return (
-    <div className="flex items-center border-b border-gray-900 justify-between px-4 py-3 hover:bg-gray-900 transition-colors">
-      {/* Left Side: Profile + Text */}
+  <div onMouseLeave={()=>setClicked(false)} onClick={()=>setSelectedChat(email ?? "")} className={` ${SelectedChat === email ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group`}>
+      
       <div className="flex items-center gap-3">
         <div className="relative">
+        {profilePicture ? (
           <img
-            src={profileUrl}
+            src={profilePicture}
             alt={name}
             className="h-10 w-10 rounded-full object-cover"
           />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-medium text-blue-600">{name}</span>
-          <span className="text-sm text-gray-500">{message}</span>
-        </div>
+        ):(
+          <RiProfileFill className="h-10 w-10 rounded-full "/>  
+        )}
+        {isOnline && (
+          <FaCircle className="absolute bottom-0 right-0 h-3 w-3 text-green-500 bg-gray-950 rounded-full border-2 border-gray-950" />
+        )}
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm font-semibold text-white">{name}</span>
+        {email && <span className="text-xs text-gray-400">{email}</span>}
+        {description && <span className="text-xs text-gray-500 italic">{description}</span>}
+      </div>
       </div>
 
-      {/* Right Side: Unread count + Time */}
-      <div className="flex flex-col items-end gap-1">
-        <span className="text-xs text-gray-500">{time}</span>
-        {unreadCount > 0 && (
-          <span className="text-white bg-blue-500 rounded-full h-6 w-6 text-sm flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
+      <div className="hidden relative group-hover:block ">
+        <BsThreeDots onClick={()=>setClicked((prev)=>!prev)}  className=" size-5 hover:text-blue-500" />
+        {clicked && (
+          <div className="absolute z-100 w-fit flex flex-col gap-1  top-[100%] left-[100%]  bg-gray-900 text-white">
+           
+            <div className="w-full text-nowrap p-2 hover:bg-gray-950">
+              Remove 
+            </div>
+
+
+            {category === 'Friends' && (
+                <div className="w-full text-nowrap p-2 hover:bg-gray-950">
+                  Chat
+                </div>
+            )}
+
+            <div>
+
+            </div>
+          </div>
+        )} 
       </div>
     </div>
   );
-};
+}
 
 export default ChatListItem;

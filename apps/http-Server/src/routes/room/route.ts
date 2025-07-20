@@ -2,18 +2,23 @@ import express from "express";
 import { RoomModel, UserModel } from "@repo/database/db";
 const roomRouter = express.Router();
 
-
-
-//  Change Room Name (Only Admin)
+// ------------------ Change Room Name ------------------
 roomRouter.post("/changeRoomName", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { newName, roomId } = req.body;
+    const { newName, name } = req.body;
 
-    const room = await RoomModel.findById(roomId);
+    if (!newName || !name) {
+      return res.status(400).json({ message: "Room name and new name are required" });
+    }
+
+    const room = await RoomModel.findOne({ name });
     if (!room) return res.status(400).json({ message: "No such room exists" });
 
-    if (!room.isGroup || room.members.length < 3) {
+    const existingRoom = await RoomModel.findOne({ name: newName });
+    if (existingRoom) return res.status(400).json({ message: "Room with this name already exists" });
+
+    if (room.members.length < 3) {
       return res.status(400).json({ message: "Cannot rename rooms with fewer than 3 members" });
     }
 
@@ -30,56 +35,49 @@ roomRouter.post("/changeRoomName", async (req: any, res: any) => {
   }
 });
 
-//  Create Room (Set creator as Admin)
+// ------------------ Create Room ------------------
 roomRouter.post("/createRoom", async (req: any, res: any) => {
   try {
     const userId = req.userId;
     const { name } = req.body;
 
-    if(!name){
-      return res.status(400).json({ message: "Room name is required" });
+    if (!name) return res.status(400).json({ message: "Room name is required" });
+
+    const existingRoom = await RoomModel.findOne({ name });
+    if (existingRoom) {
+      return res.status(400).json({ message: "Room with this name already exists" });
     }
 
     const newRoom = await RoomModel.create({
-        name,
-        members:[userId],
-        isGroup: false,
-        Admin: userId
-    })
-    const user = await UserModel.findByIdAndUpdate(
-      userId,{
-        $push: { rooms: newRoom._id }
-      }
-    );
+      name,
+      members: [userId],
+      Admin: userId,
+    });
 
- 
+    await UserModel.findByIdAndUpdate(userId, {
+      $addToSet: { rooms: newRoom._id },
+    });
+
     return res.status(201).json({ message: "Room created", room: newRoom });
   } catch (err) {
     return res.status(500).json({ message: "Internal Error", err });
   }
 });
 
-//  Delete Room (Only Admin)
+// ------------------ Delete Room ------------------
 roomRouter.post("/deleteRoom", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { roomId } = req.body;
+    const { name } = req.body;
 
-    const room = await RoomModel.findById(roomId);
+    const room = await RoomModel.findOne({ name });
     if (!room) return res.status(400).json({ message: "Room not found" });
 
     if (room.Admin.toString() !== userId) {
       return res.status(403).json({ message: "Only the Admin can delete this room" });
     }
 
-    await RoomModel.findByIdAndDelete(roomId);
-
-
-    //room.members is an array of user ObjectIds (e.g., ["user1Id", "user2Id"]).
-    // $in is a MongoDB operator that matches any value inside the given array.
-    // So, this targets all users whose _id is listed as a member of the room.
-    // $pull removes a specific value from an array.
-    // In this case, it's removing room._id from each user's rooms array.
+    await RoomModel.findByIdAndDelete(room._id);
 
     await UserModel.updateMany(
       { _id: { $in: room.members } },
@@ -92,17 +90,18 @@ roomRouter.post("/deleteRoom", async (req: any, res: any) => {
   }
 });
 
-roomRouter.post("/deleteMember", async (req: any, res:any) => {
+// ------------------ Delete Member ------------------
+roomRouter.post("/deleteMember", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { target, roomId } = req.body;
+    const { username, name } = req.body;
 
-    const TargetUser = await UserModel.findById(target);
-    if (!TargetUser) {
-      return res.status(400).json({ message: "This user does not exist in the database" });
+    const targetUser = await UserModel.findOne({ username });
+    if (!targetUser) {
+      return res.status(400).json({ message: "This user does not exist" });
     }
 
-    const room = await RoomModel.findById(roomId);
+    const room = await RoomModel.findOne({ name });
     if (!room) {
       return res.status(400).json({ message: "No such room exists" });
     }
@@ -111,27 +110,28 @@ roomRouter.post("/deleteMember", async (req: any, res:any) => {
       return res.status(403).json({ message: "Only admins can remove members" });
     }
 
-    if (!room.members.includes(target)) {
-      return res.status(400).json({ message: "Target user is not a member of the room" });
+    const isMember = room.members.some((id) => id.toString() === targetUser._id);
+    if (!isMember) {
+      return res.status(400).json({ message: "User is not a member of this room" });
     }
 
     if (room.members.length === 2) {
-      // If only 2 members left, delete room
-      await RoomModel.findByIdAndDelete(roomId);
-
-      // Remove room from both users' room lists
+      await RoomModel.findByIdAndDelete(room._id);
       await UserModel.updateMany(
         { _id: { $in: room.members } },
         { $pull: { rooms: room._id } }
       );
     } else {
-      // Remove target user from room
-      room.members = room.members.filter((id:any) => id.toString() !== target);
+      room.members = room.members.filter(
+        (id: any) => id.toString() !== targetUser._id 
+      );
       await room.save();
 
-      // Remove room from target user
-      TargetUser.rooms = TargetUser.rooms.filter((id:any) => id.toString() !== roomId);
-      await TargetUser.save();
+      
+      targetUser.rooms = targetUser.rooms.filter(
+        (id: any) => id.toString() !== room._id
+      );
+      await targetUser.save();
     }
 
     return res.status(200).json({ message: "Removed successfully" });
@@ -140,31 +140,30 @@ roomRouter.post("/deleteMember", async (req: any, res:any) => {
   }
 });
 
-roomRouter.post("/addMember", async (req:any, res:any) => {
+// ------------------ Add Member ------------------
+roomRouter.post("/addMember", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { newMemberId, roomId } = req.body;
+    const { username, name } = req.body;
 
-    const newMember = await UserModel.findById(newMemberId);
+    const newMember = await UserModel.findOne({ username });
     if (!newMember) {
-      return res.status(400).json({ message: "The new member does not exist" });
+      return res.status(400).json({ message: "User does not exist" });
     }
 
-    const room = await RoomModel.findById(roomId);
+    const room = await RoomModel.findOne({ name });
     if (!room) {
-      return res.status(400).json({ message: "No such room exists" });
+      return res.status(400).json({ message: "Room not found" });
+    }
+    const isAlreadyMember = room.members.some((id) => id.toString() === newMember._id);
+    if (isAlreadyMember) {
+      return res.status(400).json({ message: "User already in the room" });
     }
 
-    if (room.members.includes(newMemberId)) {
-      return res.status(400).json({ message: "User is already a member of the room" });
-    }
-
-    // Add member to room and save
-    room.members.push(newMemberId);
+    room.members.push(newMember._id as any);
     await room.save();
 
-    // Add room to user's list
-    newMember.rooms.push(room._id as typeof newMember.rooms[0]);
+    newMember.rooms.push(room._id as any);
     await newMember.save();
 
     return res.status(200).json({ message: "Member added successfully" });

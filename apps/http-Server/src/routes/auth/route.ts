@@ -9,16 +9,10 @@ const JWT_SECRET = process.env.JWT_SECRET ;
 
 const authRouter = express.Router();
 
-/**
- * JWT Token Generator
- */
 const generateToken = (userId: string): string => {
   return jwt.sign({ id: userId }, JWT_SECRET as string, { expiresIn: "7d" });
 };
 
-/**
- * Signup Route
- */
 authRouter.post("/signup", async (req: any, res: any) => {
   try {
     const { username, email, password } = req.body;
@@ -53,9 +47,7 @@ authRouter.post("/signup", async (req: any, res: any) => {
   }
 });
 
-/**
- * Login Route
- */
+
 authRouter.post( '/login',async (req: any, res: any) => {
   try {
     const { email, password } = req.body;

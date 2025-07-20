@@ -1,0 +1,187 @@
+import { motion } from "framer-motion";
+import { useRecoilState } from "recoil";
+import { SelectedState } from "../recoil states/sidebar/sidebar";
+import { MdOutlineGroup } from "react-icons/md";
+import { CiCirclePlus } from "react-icons/ci";
+import { useDetalis } from "../recoil states/user details/user";
+import ChatListItem from "./ChatListItem";
+import { useEffect, useState } from "react";
+import AddFriendModal from "../recoil states/modals/AddFriendModal";
+
+function ChatSection() {
+  const [Selected] = useRecoilState(SelectedState);
+  const [userDetail] = useRecoilState(useDetalis);
+  const [resizing, setResizing] = useState(false);
+  const [width, setWidth] = useState(420);
+  const [FriendModal, setFriendModal ] = useRecoilState(AddFriendModal);
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (resizing) {
+      const newWidth = e.clientX;
+      if (newWidth >= 240 && newWidth <= 600) {
+        setWidth(newWidth);
+      }
+    }
+  };
+
+  const handleMouseDown = () => {
+    setResizing(true);
+    document.body.style.userSelect = "none";
+    document.body.classList.add("dragging");
+  };
+
+  const handleMouseUp = () => {
+    setResizing(false);
+    document.body.style.userSelect = "";
+    document.body.classList.remove("dragging");
+  };
+
+  const openModalFriends = () =>{
+    setFriendModal(true);
+  }
+
+  useEffect(() => {
+    console.log(userDetail);
+    if (resizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.userSelect = "";
+    };
+  }, [resizing]);
+
+  return (
+    <div className="relative h-full">
+
+      <div
+        onMouseDown={handleMouseDown}
+        className={` ${resizing? "bg-blue-100" : ""} w-1 h-full hover:cursor-col-resize hover:bg-blue-100 absolute right-0 top-0 z-10`}
+      ></div>
+
+
+        <motion.div
+          initial={{ width: 0, opacity: 0 }}
+          animate={!resizing ? { width: width, opacity: 1 } : false}
+          exit={{ width: 0, opacity: 0, transition: { duration: 0.5 } }}
+          transition={!resizing ? { duration: 0.4, ease: "easeInOut" } : { duration: 0 }}
+          className="h-screen relative bg-gray-950 flex flex-col gap-5 items-center justify-start overflow-hidden text-white py-5"
+          style={{ width: `${width}px` }}
+        >
+
+          <div className="top flex items-center justify-between w-full border-b px-10 pb-5 border-blue-950 text-white">
+            <h1 className="text-2xl font-semibold">{Selected}</h1>
+            {(Selected === "Chats" || Selected === "Friends") && (
+              <div className="right flex items-center gap-5">
+                {Selected === "Chats" && (
+                  <>
+                    <div title="Add new Group" className="hover:cursor-pointer border rounded-md p-1 border-gray-700 hover:bg-gray-800">
+                      <MdOutlineGroup className="h-6 w-6" />
+                    </div>
+                    <div onClick={openModalFriends} title="Add new Friend" className="hover:cursor-pointer border rounded-md p-1 border-gray-700 hover:bg-gray-800">
+                      <CiCirclePlus className="h-6 w-6" />
+                    </div>
+                  </>
+                )}
+                {Selected === "Friends" && (
+                  <div title="Add new Friend" className="border hover:cursor-pointer rounded-md p-1 border-gray-700 hover:bg-gray-800">
+                    <CiCirclePlus className="h-6 w-6" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="middle w-full px-10">
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full focus:outline-none focus:ring-0 focus:border-none rounded-md bg-gray-900 px-3 py-3 placeholder-gray-400"
+            />
+          </div>
+
+          <div className="bottom scrollbar-hide w-full px-8 flex flex-col gap-2 overflow-y-auto h-full">
+            {Selected === "Friends" && (
+              userDetail.friends[0].id === "" ? (
+                <div className="text-center text-white mt-10 font-bold text-2xl">No friends found</div>
+              ) :
+              userDetail.friends?.map((friend) => (
+                <ChatListItem
+                  category='Friends'
+                  key={friend.id}
+                  name={friend.username}
+                  email={friend.email}
+                  profilePicture={friend.profilePicture}
+                  description={friend.discription}
+                  isOnline={true}
+                />
+              )))}
+
+            {Selected === "Chats" &&(
+               userDetail.rooms[0].id === "" ? (
+                <div className="text-center text-white mt-10 font-bold text-2xl">No Chats found</div>
+              ) :
+              userDetail.rooms?.map((chat) => (
+                <ChatListItem category='Chats' key={chat.id} name={chat.name} />
+              )))}
+
+            {Selected === "Archieve" &&(
+              userDetail.archived[0].id === "" ? (
+                <div className="text-center text-white mt-10 font-bold text-2xl">No archived chats</div>
+              ) :
+              userDetail.archived?.map((arch) => (
+                <ChatListItem
+                  category='Archived'
+                  key={arch.id}
+                  name={arch.username}
+                  email={arch.email}
+                  profilePicture={arch.profilePicture}
+                  description={arch.discription}
+                />
+              )))
+              }
+
+            {Selected === "Favourites" && (
+                userDetail.favourites[0].id === "" ? (
+                  <div className="text-center text-white mt-10 font-bold text-2xl">No favourites found</div>
+                ) :
+                userDetail.favourites?.map((fav) => (
+                  <ChatListItem
+                    category='Favourites'
+                    key={fav.id}
+                    name={fav.username}
+                    email={fav.email}
+                    profilePicture={fav.profilePicture}
+                    description={fav.discription}
+                  />
+                ))
+              )
+            }
+
+            {Selected === "Blocked" &&
+             ( userDetail.blocked[0].id === "" ? (
+                <div className="text-center text-white mt-10 font-bold text-2xl">No blocked users</div>
+              ) :
+              userDetail.blocked?.map((block) => (
+                <ChatListItem
+                 category='Blocked'
+                  key={block.id}
+                  name={block.username}
+                  email={block.email}
+                  profilePicture={block.profilePicture}
+                  description={block.discription}
+                />
+              )))
+            }
+          </div>
+
+        </motion.div>
+
+    </div>
+  );
+}
+
+export default ChatSection;

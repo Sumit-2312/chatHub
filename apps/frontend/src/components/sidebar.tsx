@@ -29,7 +29,8 @@ function Sidebar() {
         borderRightWidth : Open? "2px" : "0px",
         borderRightColor: Open ? "#030600" : "transparent",
       }}
-     className="h-screen w-16 bg-gray-950 flex border-r  flex-col items-center justify-end py-5 px-2 ">
+     className="h-screen relative w-16 bg-gray-950 flex border-r  flex-col items-center justify-end py-5 px-2 ">
+
 
         <div className="top w-full flex flex-col justify-start gap-10 items-center h-full ">
 

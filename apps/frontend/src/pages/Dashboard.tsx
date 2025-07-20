@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/sidebar";
 import { haveAnySelectedState } from "../recoil states/sidebar/sidebar";
 import { useRecoilState, useRecoilValue } from "recoil";
-import Friends from "../components/Friends";
 import { AnimatePresence } from "motion/react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useDetalis } from "../recoil states/user details/user";
+import ChatSection from "../components/ChatSection";
+import AddFriendModal from "../recoil states/modals/AddFriendModal";
+import FriendModal from "../components/FriendModal";
 
 function Dashboard() {
 
@@ -15,6 +17,7 @@ function Dashboard() {
     const haveSelected = useRecoilValue(haveAnySelectedState);
     const [Open , setOpen ] = useState(true);
     const [userDtls, setUserDetails] = useRecoilState(useDetalis);
+    const [OpenFriendModal,setOpenFriendModal] = useRecoilState(AddFriendModal);
 
     useEffect(()=>{
         const token = localStorage.getItem("token");
@@ -67,7 +70,6 @@ function Dashboard() {
         fetchUserDetails();
     },[]);
 
-
     useEffect(()=>{
         console.log(userDtls)
     },[userDtls]);
@@ -77,9 +79,11 @@ function Dashboard() {
     <div className="flex items-center  w-screen h-screen overflow-hidden bg-black">
         <Sidebar/>
         <AnimatePresence mode="wait">
-            {Open && <Friends key="friends" />}
-        </AnimatePresence>    
-      
+            {Open && <ChatSection key="friends" />}
+        </AnimatePresence>  
+
+        {OpenFriendModal && <FriendModal/>}
+
       </div>
   )
 }

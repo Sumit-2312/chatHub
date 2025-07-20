@@ -1,24 +1,31 @@
 import mongoose, { Schema, model } from "mongoose";
 import { IRoom, IUser } from "./types/route";
 
-
-
-
-
-
 // -------------------- User Schema --------------------
 const UserSchema = new Schema<IUser>(
   {
-    username: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    friends: [{ type: Schema.Types.ObjectId, ref: "User" }], //  friends
-    rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],  // chats
-    archived: [{type:Schema.Types.ObjectId, ref: "Room"}], // archived chats
-    blocked:[{type:Schema.Types.ObjectId, ref: "User"}], // blocked users
-    favourites: [{ type: Schema.Types.ObjectId, ref: "Room" }], // favorite chats
-    profilePicture: { type: String, default: "" }, // URL to the profile picture
-    discription: { type: String, default: "" }, // User description
+    username: {
+      type: String,
+      required: [true, "Username is required"],
+      unique: true
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [3, "Password must be at least 3 characters"],
+    },
+    friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],
+    archived: [{ type: Schema.Types.ObjectId, ref: "Room" }],
+    blocked: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    favourites: [{ type: Schema.Types.ObjectId, ref: "Room" }],
+    profilePicture: { type: String, default: "" },
+    discription: { type: String, default: "" }
   },
   { timestamps: true }
 );
@@ -26,23 +33,16 @@ const UserSchema = new Schema<IUser>(
 const UserModel: mongoose.Model<IUser> =
   mongoose.models.User || model<IUser>("User", UserSchema);
 
-
-  
-  // when we do model("User", UserSchema) it creates a new collection in the database with the name "users"(plural of User)
-  // You can use the model of collection "users" by using mongoose.models.User
-
-
-
-
-
-
 // -------------------- Room Schema --------------------
 const RoomSchema = new Schema<IRoom>(
   {
-    name: { type: String },
+    name: {
+      type: String,
+      unique: true,
+      required: [true, "Room name is required"]
+    },
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    isGroup: { type: Boolean, default: false },
-    Admin: { type: Schema.Types.ObjectId, ref: "User" }, // ✅ Fixed type
+    Admin: { type: Schema.Types.ObjectId, ref: "User", required: true }
   },
   { timestamps: true }
 );
@@ -50,36 +50,29 @@ const RoomSchema = new Schema<IRoom>(
 const RoomModel: mongoose.Model<IRoom> =
   mongoose.models.Room || model<IRoom>("Room", RoomSchema);
 
-
-
-
-
 // -------------------- Base Message Schema --------------------
 const baseMessageSchema = new Schema(
   {
     ChatRoomId: {
       type: Schema.Types.ObjectId,
       ref: "Room",
-      required: true,
+      required: true
     },
     messageType: {
       type: String,
       enum: ["text", "image", "file"],
-      required: true,
-    },
+      required: true
+    }
   },
   {
     discriminatorKey: "messageType",
     collection: "messages",
-    timestamps: true, 
+    timestamps: true
   }
-);  
+);
 
-// Base message model
-const Message = (mongoose.models.Message || model("Message", baseMessageSchema)) as mongoose.Model<any>;
-
-
-
+const Message =
+  mongoose.models.Message || model("Message", baseMessageSchema);
 
 // -------------------- Text Message --------------------
 const textSchema = new Schema({
@@ -89,45 +82,34 @@ const textSchema = new Schema({
     required: true,
     validate: {
       validator: function (v: any) {
-        // Accepts either a valid ObjectId or the string "AI"
         return (
           mongoose.Types.ObjectId.isValid(v) ||
           (typeof v === "string" && v === "AI")
         );
       },
-      message: "Sender must be a valid user ObjectId or the string 'AI'",
-    },
-  },
+      message: "Sender must be a valid ObjectId or 'AI'"
+    }
+  }
 });
 
 const TextMessage =
   mongoose.models.TextMessage || Message.discriminator("text", textSchema);
 
-
-
-
-
-
-
 // -------------------- File Message --------------------
 const fileSchema = new Schema({
-  url: {
-    type: String,
+  url: { type: String, required: true },
+  sender: {
+    type: Schema.Types.ObjectId,
     required: true,
-  },
-   sender: {
-    type: Schema.Types.ObjectId, required: true, ref: "User"
+    ref: "User"
   },
   filename: String,
   filetype: String,
-  size: Number,
+  size: Number
 });
 
 const FileMessage =
   mongoose.models.FileMessage || Message.discriminator("file", fileSchema);
-
-
-
 
 // -------------------- Exports --------------------
 export {
@@ -135,5 +117,5 @@ export {
   RoomModel,
   Message,
   TextMessage,
-  FileMessage,
+  FileMessage
 };
