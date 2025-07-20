@@ -8,12 +8,18 @@ import { haveAnySelectedState, SelectedState } from "../recoil states/sidebar/si
 import { useRecoilState, useRecoilValue } from "recoil"
 import { motion } from "motion/react"
 import { useEffect, useState } from "react"
+import SettingModalState from "../recoil states/modals/SettingModal"
 
 function Sidebar() {
 
     const [Selected, setSelected] = useRecoilState(SelectedState);
     const haveSelected = useRecoilValue(haveAnySelectedState);
     const [Open , setOpen ] = useState(true);
+    const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
+
+    const handleOpenSettingModal = () => {
+        setOpenSettingModal(true);
+    }
 
     useEffect(()=>{
         if( haveSelected ) {
@@ -86,7 +92,7 @@ function Sidebar() {
 
         <div className="bottom flex  ">
             <div className="profile-image h-7 w-7 hover:cursor-pointer rounded-full">
-                <CgProfile className="h-full w-full text-white" />
+                <CgProfile onClick={handleOpenSettingModal} className="h-full w-full text-white" />
             </div>
         </div>
 

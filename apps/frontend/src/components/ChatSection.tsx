@@ -7,6 +7,7 @@ import { useDetalis } from "../recoil states/user details/user";
 import ChatListItem from "./ChatListItem";
 import { useEffect, useState } from "react";
 import AddFriendModal from "../recoil states/modals/AddFriendModal";
+import AddGroupModal from "../recoil states/modals/AddGroupModal";
 
 function ChatSection() {
   const [Selected] = useRecoilState(SelectedState);
@@ -14,6 +15,7 @@ function ChatSection() {
   const [resizing, setResizing] = useState(false);
   const [width, setWidth] = useState(420);
   const [FriendModal, setFriendModal ] = useRecoilState(AddFriendModal);
+  const [GroupModal, setGroupModal ] = useRecoilState(AddGroupModal);
 
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
@@ -40,6 +42,10 @@ function ChatSection() {
     setFriendModal(true);
   }
 
+
+  const openModalGroup = () =>{
+    setGroupModal(true);
+  }
   useEffect(() => {
     console.log(userDetail);
     if (resizing) {
@@ -78,7 +84,7 @@ function ChatSection() {
               <div className="right flex items-center gap-5">
                 {Selected === "Chats" && (
                   <>
-                    <div title="Add new Group" className="hover:cursor-pointer border rounded-md p-1 border-gray-700 hover:bg-gray-800">
+                    <div onClick={openModalGroup} title="Add new Group" className="hover:cursor-pointer border rounded-md p-1 border-gray-700 hover:bg-gray-800">
                       <MdOutlineGroup className="h-6 w-6" />
                     </div>
                     <div onClick={openModalFriends} title="Add new Friend" className="hover:cursor-pointer border rounded-md p-1 border-gray-700 hover:bg-gray-800">

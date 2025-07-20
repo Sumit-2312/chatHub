@@ -11,6 +11,10 @@ import ChatSection from "../components/ChatSection";
 import AddFriendModal from "../recoil states/modals/AddFriendModal";
 import FriendModal from "../components/FriendModal";
 import MessageArea from "../components/MessageArea";
+import GroupModal from "../components/GroupModal";
+import AddGroupModal from "../recoil states/modals/AddGroupModal";
+import SettingModal from "../components/SettingModal";
+import SettingModalState from "../recoil states/modals/SettingModal";
 
 function Dashboard() {
 
@@ -19,6 +23,8 @@ function Dashboard() {
     const [Open , setOpen ] = useState(true);
     const [userDtls, setUserDetails] = useRecoilState(useDetalis);
     const [OpenFriendModal,setOpenFriendModal] = useRecoilState(AddFriendModal);
+    const [OpenGroupModal, setOpenGroupModal] = useRecoilState(AddGroupModal);
+    const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
 
     useEffect(()=>{
         const token = localStorage.getItem("token");
@@ -86,6 +92,10 @@ function Dashboard() {
         <MessageArea/>    
 
         {OpenFriendModal && <FriendModal/>}
+
+        {OpenGroupModal && <GroupModal/>}
+
+        {OpenSettingModal && <SettingModal/>}
 
       </div>
   )
