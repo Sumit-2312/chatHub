@@ -15,14 +15,14 @@ export const useDetalis = atom({
             discription: "Hi i am using ChatHub!"
         }],
         rooms: [{
-            id: "",
-            name:"",
+            id: "1",
+            name:"Sumit",
             member:[{
-            id: "",
-            username:"",
-            email: "",
+            id: "1",
+            username:"Sumit",
+            email: "sumitsongh@gmail.com",
             profilePicture: "",
-            discription: ""
+            discription: "Hi i am using ChatHub"
         }]
         }],
         archived: [{

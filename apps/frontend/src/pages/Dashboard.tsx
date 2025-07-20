@@ -10,6 +10,7 @@ import { useDetalis } from "../recoil states/user details/user";
 import ChatSection from "../components/ChatSection";
 import AddFriendModal from "../recoil states/modals/AddFriendModal";
 import FriendModal from "../components/FriendModal";
+import MessageArea from "../components/MessageArea";
 
 function Dashboard() {
 
@@ -81,6 +82,8 @@ function Dashboard() {
         <AnimatePresence mode="wait">
             {Open && <ChatSection key="friends" />}
         </AnimatePresence>  
+
+        <MessageArea/>    
 
         {OpenFriendModal && <FriendModal/>}
 

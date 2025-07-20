@@ -87,7 +87,7 @@ function ChatSection() {
                   </>
                 )}
                 {Selected === "Friends" && (
-                  <div title="Add new Friend" className="border hover:cursor-pointer rounded-md p-1 border-gray-700 hover:bg-gray-800">
+                  <div onClick={openModalFriends} title="Add new Friend" className="border hover:cursor-pointer rounded-md p-1 border-gray-700 hover:bg-gray-800">
                     <CiCirclePlus className="h-6 w-6" />
                   </div>
                 )}

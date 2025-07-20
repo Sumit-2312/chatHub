@@ -40,9 +40,9 @@ function FriendModal() {
           </button>
           <button
             onClick={handleAdd}
-            className={` ${loading? "bg-gray-500":"bg-blue-500"} px-4 py-2 rounded-md font-semibold hover:bg-blue-700 text-white text-sm`}
+            className={` ${loading? "bg-green-300 text-black hover:cursor-not-allowed":"bg-blue-500 hover:bg-blue-700"} px-4 py-2 rounded-md font-semibold  text-white text-sm`}
           >
-            {loading ? "Adding": "Add"}
+            {loading ? "Adding...": "Add"}
           </button>
         </div>
       </div>
