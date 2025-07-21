@@ -1,7 +1,7 @@
 import express from "express";
 import { UserModel } from "@repo/database/db";
 const userRouter = express.Router();
-
+import bcrypt from "bcrypt";
 
 userRouter.get("/userDetails", async (req: any, res:any) => {
   try {
@@ -54,24 +54,32 @@ const user = await UserModel.findById(userId)
 userRouter.post("/addFriend",async(req:any,res:any)=>{
   try{
     const userId = req.userId;
-    const {friendEmail} = req.body;
+    const {username} = req.body;
 
-    if (!userId || !friendEmail) {
-      return res.status(400).json({ message: "User ID and friend email are required" });
+    if (!userId || !username) {
+      return res.status(400).json({ message: "User ID and friend username are required" });
     }
-    const friend = await UserModel.findOne({ email: friendEmail });
+    const friend = await UserModel.findOne({ username });
     if (!friend) {
       return res.status(404).json({ message: "Friend not found" });
     }
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      { $addToSet: { friends: friend._id } }, // add friend if not already present
-      { new: true } // return the updated user
-    );
+
+    const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    return res.status(200).json({ message: "Friend added successfully", user });
+
+    if( user.friends.includes(friend._id as any)){
+      return res.status(400).json({ message: "Friend already exists" });  
+    }
+
+    user.friends.push(friend._id as any);
+    friend.friends.push(user._id as any);
+    await user.save();
+    await friend.save();
+
+    return res.status(200).json({message: "Friend added successfully",id: friend._id, username: friend.username, email: friend.email, profilePicture: friend.profilePicture, discription: friend.discription});
+    
   } catch (err) {
     return res.status(500).json({ message: "Internal error", error: err });
   }
@@ -102,6 +110,8 @@ userRouter.post("/removeFriend",async(req:any,res:any)=>{
     return res.status(500).json({ message: "Internal error", error: err });
   }
 });
+
+//------------------------------------------------------------------------------------------------------------------//
 
 userRouter.post("/addToFavourites", async (req:any, res:any) => {
   try { 
@@ -286,6 +296,8 @@ userRouter.post('/addToArchived', async (req:any, res:any) => {
   }
 });
 
+//---------------------------------------------------------------------------------------------------------//
+
 userRouter.post('/removeFromArchived', async (req:any, res:any) => {
   try {   
     const userId = req.userId;
@@ -322,6 +334,39 @@ userRouter.post('/removeFromArchived', async (req:any, res:any) => {
     return res.status(500).json({ message: "Internal error", error: err });
   }     
 }); 
+
+userRouter.post('/updateProfile',async(req:any,res:any)=>{
+
+  try{
+    const userId = req.userId;
+    const {username,profilePicture,discription,email} = req.body;
+    if (!userId || !username || email) {
+      return res.status(400).json({ message: "User ID, username and email are required" });
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isCorrect =  bcrypt.compareSync(req.body.oldPassword, user.password); // compareSync means that we are comparing the old password with the hashed password stored in the database
+    if (!isCorrect) { 
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
+
+  user.username = username;
+  user.email = email;
+  user.discription = discription;
+  if (profilePicture) {
+    user.profilePicture = profilePicture; // assuming profilePicture is a URL or base64 string
+  }
+  await user.save();
+
+  return res.status(200).json({ message: "Profile updated successfully", user });
+  }catch(err:any){
+    return res.status(500).json({ message: "Internal error", error: err.message });
+  }
+})
 
 
 

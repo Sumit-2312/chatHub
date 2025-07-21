@@ -12,10 +12,12 @@ interface Props {
   description?: string;
   isOnline?: boolean;
   category: string
+  onRemove: () => void;
+  onChat?: () => void;
 }
 
 
-function ChatListItem({ name,category, email, profilePicture, description, isOnline }: Props) {
+function ChatListItem({onRemove,onChat, name,category, email, profilePicture, description, isOnline }: Props) {
 
 
   const [SelectedChat,setSelectedChat] = useRecoilState(selectedChat);
@@ -23,7 +25,7 @@ function ChatListItem({ name,category, email, profilePicture, description, isOnl
 
 
   return (
-  <div onMouseLeave={()=>setClicked(false)} onClick={()=>setSelectedChat(email ?? "")} className={` ${SelectedChat === email ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group`}>
+  <div onMouseLeave={()=>setClicked(false)} onClick={()=>setSelectedChat(name ?? "")} className={` ${SelectedChat === name ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group`}>
       
       <div className="flex items-center gap-3">
         <div className="relative">
@@ -52,16 +54,17 @@ function ChatListItem({ name,category, email, profilePicture, description, isOnl
         {clicked && (
           <div className="absolute z-100 w-fit flex flex-col gap-1  top-[100%] left-[100%]  bg-gray-900 text-white">
            
-            <div className="w-full text-nowrap p-2 hover:bg-gray-950">
+            <div onClick={onRemove} className="w-full text-nowrap p-2 hover:bg-gray-950">
               Remove 
             </div>
 
 
             {category === 'Friends' && (
-                <div className="w-full text-nowrap p-2 hover:bg-gray-950">
+                <div onClick={onChat} className="w-full text-nowrap p-2 hover:bg-gray-950">
                   Chat
                 </div>
             )}
+
 
             <div>
 

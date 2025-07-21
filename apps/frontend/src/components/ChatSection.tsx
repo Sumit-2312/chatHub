@@ -8,6 +8,9 @@ import ChatListItem from "./ChatListItem";
 import { useEffect, useState } from "react";
 import AddFriendModal from "../recoil states/modals/AddFriendModal";
 import AddGroupModal from "../recoil states/modals/AddGroupModal";
+import axios from "axios";
+import toast from "react-hot-toast";
+import selectedChat from "../recoil states/chat/selectedChat";
 
 function ChatSection() {
   const [Selected] = useRecoilState(SelectedState);
@@ -16,6 +19,9 @@ function ChatSection() {
   const [width, setWidth] = useState(420);
   const [FriendModal, setFriendModal ] = useRecoilState(AddFriendModal);
   const [GroupModal, setGroupModal ] = useRecoilState(AddGroupModal);
+  const [userDetails, setUserDetails] = useRecoilState(useDetalis);
+  const [Chat, setChat] = useRecoilState(selectedChat);
+  const [Sidebar,setSidebar] = useRecoilState(SelectedState);
 
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
@@ -42,10 +48,152 @@ function ChatSection() {
     setFriendModal(true);
   }
 
-
   const openModalGroup = () =>{
     setGroupModal(true);
   }
+
+  const handleRemoveFriend = async(email: string) => {
+    // Logic to remove friend
+    console.log(`Removing friend with email: ${email}`);
+    try{
+      const response = await axios.post('http://localhost:5000/user/removeFriend',{
+        friendEmail : email
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      setUserDetails(prev=>({
+        ...prev,
+        friends: prev.friends.filter(friend => friend.email !== email)
+      }))
+      toast.success(response.data.message || "Friend removed successfully");
+
+    }catch(err:any){
+      toast.error(err.response.data.message || "An error occurred while removing friend");
+    }
+  };
+
+  const handleRemoveArchived = async(email: string) => {
+    console.log(`Removing archived chat with email: ${email}`);
+    // Logic to remove archived chat
+    try{
+      const response = await axios.post('http://localhost:5000/user/removeFromArchived',{
+        friendEmail: email
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      setUserDetails(prev=>({
+        ...prev,
+        archived: prev.archived.filter(arch => arch.email !== email)
+      }))
+      toast.success(response.data.message || "Archived chat removed successfully");
+    }
+    catch(err:any){
+      toast.error(err.response.data.message || "Failed to remove archived chat");
+    }
+  };
+
+  const handleRemoveChat = async(name: string) => {
+    // Logic to remove chat
+    console.log(`Removing chat with id: ${id}`);
+    try{
+      const response = await axios.post('http://localhost:5000/room/removeChat',{
+        name
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      setUserDetails(prev=>({
+        ...prev,
+        rooms: prev.rooms.filter(room => room.name !== name)
+      }))
+      toast.success(response.data.message || "Chat removed successfully");
+    }catch(err:any){  
+      toast.error(err.response.data.message || "An error occurred while removing chat");
+    }
+  };
+
+  const handleRemoveFavourite = async(email: string) => {
+    // Logic to remove favourite
+    console.log(`Removing favourite with email: ${email}`);
+    try{
+      const response = await axios.post('http://localhost:5000/user/removeFromFavourites',{
+        friendEmail: email
+    } ,{
+      headers:{
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+      }
+    )
+    setUserDetails(prev=>({
+      ...prev,  
+        favourites: prev.favourites.filter(fav => fav.email !== email)
+    }))
+    toast.success(response.data.message || "Favourite removed successfully");
+
+    }catch(err:any){
+        toast.error(err.response.data.message || "An error occurred while removing favourite");
+    }
+  };
+
+  const handleRemoveBlocked = async(email: string) => {
+    // Logic to remove blocked user
+    console.log(`Removing blocked user with email: ${email}`);
+    try{
+      const response = await axios.post('http://localhost:5000/user/removeFromBlocked',{
+        friendEmail: email
+      },{
+        headers:{
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      setUserDetails(prev=>({
+        ...prev,
+        blocked: prev.blocked.filter(block => block.email !== email)
+      }))
+      toast.success(response.data.message || "Blocked user removed successfully");
+    }catch(err:any){  
+      toast.error(err.response.data.message || "An error occurred while removing blocked user");
+    }
+  };
+
+  const handleChatWithFriend = async(id: string,name:string) => {
+    // Logic to start chat with friend
+    console.log(`Starting chat with friend: ${id}`);
+    try{
+      const response = await axios.post('http://localhost:5000/room/createRoom',{
+        name,
+        members:[id]
+      },{
+        headers:{
+          Authorization : `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      setUserDetails(prev=>({
+        ...prev,
+        rooms: [
+          ...prev.rooms,
+          {
+            id: response.data.room._id,
+            name: response.data.room.name,
+            member: response.data.room.members 
+          }
+        ]
+      }))
+
+      setSidebar("Chats");
+      setChat(response.data.room.name);
+    }catch(err:any){
+      toast.error(err.response.data.message || "An error occurred while starting chat");
+    }
+  };
+
   useEffect(() => {
     console.log(userDetail);
     if (resizing) {
@@ -110,12 +258,14 @@ function ChatSection() {
           </div>
 
           <div className="bottom scrollbar-hide w-full px-8 flex flex-col gap-2 overflow-y-auto h-full">
-            {Selected === "Friends" && (
+            {Selected === "Friends" && ( userDetail.friends.length === 0 ||
               userDetail.friends[0].id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No friends found</div>
               ) :
               userDetail.friends?.map((friend) => (
                 <ChatListItem
+                  onRemove={() => handleRemoveFriend(friend.email)}
+                  onChat={() => handleChatWithFriend(friend.id,friend.username)}
                   category='Friends'
                   key={friend.id}
                   name={friend.username}
@@ -126,20 +276,21 @@ function ChatSection() {
                 />
               )))}
 
-            {Selected === "Chats" &&(
+            {Selected === "Chats" &&( userDetail.rooms.length === 0 ||
                userDetail.rooms[0].id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No Chats found</div>
               ) :
               userDetail.rooms?.map((chat) => (
-                <ChatListItem category='Chats' key={chat.id} name={chat.name} />
+                <ChatListItem onRemove={()=>handleRemoveChat(chat.name)} category='Chats' key={chat.id} name={chat.name} />
               )))}
 
-            {Selected === "Archieve" &&(
+            {Selected === "Archieve" &&( userDetail.archived.length === 0 ||
               userDetail.archived[0].id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No archived chats</div>
               ) :
               userDetail.archived?.map((arch) => (
                 <ChatListItem
+                  onRemove={()=>handleRemoveArchived(arch.email)}
                   category='Archived'
                   key={arch.id}
                   name={arch.username}
@@ -150,12 +301,13 @@ function ChatSection() {
               )))
               }
 
-            {Selected === "Favourites" && (
+            {Selected === "Favourites" && ( userDetail.favourites.length === 0 ||
                 userDetail.favourites[0].id === "" ? (
                   <div className="text-center text-white mt-10 font-bold text-2xl">No favourites found</div>
                 ) :
                 userDetail.favourites?.map((fav) => (
                   <ChatListItem
+                    onRemove={()=>handleRemoveFavourite(fav.email)}
                     category='Favourites'
                     key={fav.id}
                     name={fav.username}
@@ -168,12 +320,13 @@ function ChatSection() {
             }
 
             {Selected === "Blocked" &&
-             ( userDetail.blocked[0].id === "" ? (
+             ( userDetail.blocked.length === 0 || userDetail.blocked[0].id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No blocked users</div>
               ) :
               userDetail.blocked?.map((block) => (
                 <ChatListItem
-                 category='Blocked'
+                  onRemove={()=>handleRemoveBlocked(block.email)}
+                  category='Blocked'
                   key={block.id}
                   name={block.username}
                   email={block.email}

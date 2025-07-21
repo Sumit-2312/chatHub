@@ -39,7 +39,7 @@ roomRouter.post("/changeRoomName", async (req: any, res: any) => {
 roomRouter.post("/createRoom", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { name } = req.body;
+    const { name,members } = req.body;
 
     if (!name) return res.status(400).json({ message: "Room name is required" });
 
@@ -48,11 +48,13 @@ roomRouter.post("/createRoom", async (req: any, res: any) => {
       return res.status(400).json({ message: "Room with this name already exists" });
     }
 
-    const newRoom = await RoomModel.create({
+    const newRoomDoc = await RoomModel.create({
       name,
-      members: [userId],
+      members: Array.isArray(members) ? [...members, userId] : [userId],
       Admin: userId,
     });
+
+    const newRoom = await newRoomDoc.populate('members', "_id username email profilePicture discription");
 
     await UserModel.findByIdAndUpdate(userId, {
       $addToSet: { rooms: newRoom._id },

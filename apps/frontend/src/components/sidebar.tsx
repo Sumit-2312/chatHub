@@ -9,6 +9,7 @@ import { useRecoilState, useRecoilValue } from "recoil"
 import { motion } from "motion/react"
 import { useEffect, useState } from "react"
 import SettingModalState from "../recoil states/modals/SettingModal"
+import { IoLogOutOutline } from "react-icons/io5"
 
 function Sidebar() {
 
@@ -90,9 +91,12 @@ function Sidebar() {
 
         </div>
 
-        <div className="bottom flex  ">
+        <div className="bottom flex flex-col gap-3 ">
             <div className="profile-image h-7 w-7 hover:cursor-pointer rounded-full">
-                <CgProfile onClick={handleOpenSettingModal} className="h-full w-full text-white" />
+                <CgProfile title="Profile" onClick={handleOpenSettingModal} className="h-full w-full text-white" />
+            </div>
+            <div className="h-7 w-7 hover:cursor-pointer rounded-full relative">
+                <IoLogOutOutline title="logout" onClick={()=>localStorage.removeItem('token')} className="h-full w-full text-white" />
             </div>
         </div>
 

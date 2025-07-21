@@ -1,6 +1,9 @@
 import  { useState } from "react";
 import { useRecoilState } from "recoil";
 import AddFriendModal from "../recoil states/modals/AddFriendModal";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useDetalis } from "../recoil states/user details/user";
 
 
 
@@ -8,9 +11,48 @@ function FriendModal() {
   const [username, setUsername] = useState("");
   const [isOpen,setIsOpen] = useRecoilState(AddFriendModal);
   const [loading,setLoading] = useState(false);
+  const [userDetails, setUserDetails] = useRecoilState(useDetalis);
   
   const handleAdd = async() =>{
     setLoading(true);
+    try{
+        const response = await axios.post(`http://localhost:5000/user/addFriend`,{
+          username: username.trim()
+        },{
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        if(response.status === 200){
+          setLoading(false);
+          setUserDetails((prevDetails)=>{
+            return{
+              ...prevDetails,
+              friends:[
+                ...prevDetails.friends,
+                {
+                  id: response.data.id,
+                  username: response.data.username,
+                  email: response.data.email,
+                  profilePicture: response.data.profilePicture || "",
+                  discription: response.data.discription || "Hi, I am using ChatHub!"
+                }
+              ]
+            }
+          })
+          toast.success("Friend added successfully");
+          setIsOpen(false);
+        }
+        else{
+          throw new Error(response.data.message || "Failed to add friend");
+        }
+    }
+    catch(error:any){
+      console.error("Error adding new freind: ",error);
+      toast.error(error.response.data.message || "Failed to add friend");
+      setLoading(false);
+      setIsOpen(false);
+    }
   }
 
   if(!isOpen) return null;

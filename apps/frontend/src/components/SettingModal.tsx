@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaUserEdit, FaLock, FaEye, FaEyeSlash, FaSave, FaTimes } from 'react-icons/fa';
 import { useRecoilState } from 'recoil';
 import SettingModalState from '../recoil states/modals/SettingModal';
+import { useDetalis } from '../recoil states/user details/user';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 function SettingModal() {
-  const [username, setUsername] = useState('Sumit');
-  const [description, setDescription] = useState('Hi I am using ChatHub!');
+  const [userDetails,setUserDetails] = useRecoilState(useDetalis);
+  const [username, setUsername] = useState(userDetails.username || '');
+  const [description, setDescription] = useState(userDetails.discription || '');
+  const [email,setEmail] = useState(userDetails.email || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,9 +29,37 @@ function SettingModal() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async() => {
     console.log({ username, description, oldPassword, newPassword, confirmPassword, profilePicture });
+    try{
+        const response = await axios.post('http://localhost:5000/user/updateProfile',{
+            username,
+            description,
+            oldPassword,
+            email,
+            newPassword,
+            confirmPassword,
+            profilePicture
+        },{
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        toast.success(response.data.message || "Profile updated successfully");
+        setOpenSettingModal(false);
+        setUserDetails(prev => ({
+            ...prev,
+            username,
+            discription: description,
+            profilePicture: profilePicture ? URL.createObjectURL(profilePicture) : prev.profilePicture
+        }));
+    }catch(err:any){
+        toast.error(err.response.data.message || "An error occurred while updating profile");
+        setOpenSettingModal(false);
+    }
   };
+
+
 
 
   return (
@@ -44,6 +77,18 @@ function SettingModal() {
                     className="w-full border px-3 py-2 rounded mt-1"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
+                    />
+                    <FaUserEdit className="absolute right-3 top-9 text-gray-500" />
+                </div>
+
+                {/* Email */}
+                <div className="mb-4 relative">
+                    <label className="block text-sm font-medium">Email</label>
+                    <input
+                    type="text"
+                    className="w-full border px-3 py-2 rounded mt-1"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                     />
                     <FaUserEdit className="absolute right-3 top-9 text-gray-500" />
                 </div>
