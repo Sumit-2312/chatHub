@@ -20,7 +20,7 @@ const upload = multer({
 
 chatRouter.get('/', async (req: any, res: any) => {
   try {
-    const { roomId } = req.body;
+    const { roomId } = req.query;
     const userId = req.userId;
 
     if (!roomId) {
@@ -38,12 +38,13 @@ chatRouter.get('/', async (req: any, res: any) => {
     if (!isMember) {
       return res.status(403).json({ message: "You are not a member of this room" });
     }
-    //@ts-ignore
+
     const roomChats = await Message.find({ ChatRoomId: roomId });
 
     if (!roomChats || roomChats.length === 0) {
       return res.status(404).json({ message: "No chats found in this room" });
     }
+
     res.status(200).json({ chats: roomChats });
   } catch (err) {
     console.error("Error in chat route:", err);

@@ -1,7 +1,63 @@
+import { useEffect, useState } from "react";
 import { FaSmile, FaMicrophone, FaPaperclip } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
+import { MdOutlineHdrOffSelect } from "react-icons/md";
+import { useRecoilState } from "recoil";
+import Allmessages from "../recoil states/messages/roomMessage";
+import selectedChat from "../recoil states/chat/selectedChat";
+import toast from "react-hot-toast";
+import axios from 'axios';
 
 function MessageArea() {
+
+  const [allChats, setAllChats] = useRecoilState(Allmessages);
+  const [messages,setMessages] = useState([]);
+  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState(selectedChat);
+  
+useEffect(() => {
+  console.log(SelectedRoomId);
+
+  const fetchMessages = async () => {
+    // Use cached messages if available
+    //@ts-ignore
+    if (allChats?.chats?.[SelectedRoomId]) {
+      //@ts-ignore
+      setMessages(allChats.chats[SelectedRoomId]);
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:5000/chat/', {
+        params: { roomId: SelectedRoomId },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const fetchedMessages = response.data.chats;
+
+      // Set messages in local state
+      setMessages(fetchedMessages);
+
+      // Cache in Recoil state
+      setAllChats((prev) => ({
+        ...prev,
+        chats: {
+          ...prev.chats,
+          [SelectedRoomId]: fetchedMessages
+        }
+      }));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to fetch messages.");
+    }
+  };
+
+  if (SelectedRoomId) {
+    fetchMessages();
+  }
+}, [SelectedRoomId]); // 🔥 Only run when the room changes
+
+
   return (
     <div className="h-screen w-full bg-gray-100 text-black flex flex-col">
 
