@@ -65,7 +65,7 @@ const baseMessageSchema = new Schema(
     }
   },
   {
-    discriminatorKey: "messageType",
+    discriminatorKey: "messageType", 
     collection: "messages",
     timestamps: true
   }

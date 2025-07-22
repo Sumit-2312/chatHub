@@ -98,9 +98,9 @@ function ChatSection() {
 
   const handleRemoveChat = async(name: string) => {
     // Logic to remove chat
-    console.log(`Removing chat with id: ${id}`);
+    console.log(`Removing chat with Room Name: ${name}`);
     try{
-      const response = await axios.post('http://localhost:5000/room/removeChat',{
+      const response = await axios.post('http://localhost:5000/room/deleteRoom',{
         name
       },{
         headers:{
@@ -112,6 +112,7 @@ function ChatSection() {
         ...prev,
         rooms: prev.rooms.filter(room => room.name !== name)
       }))
+      
       toast.success(response.data.message || "Chat removed successfully");
     }catch(err:any){  
       toast.error(err.response.data.message || "An error occurred while removing chat");
@@ -262,10 +263,10 @@ function ChatSection() {
               userDetail.friends[0].id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No friends found</div>
               ) :
-              userDetail.friends?.map((friend) => (
+              userDetail.friends?.map((friend:any) => (
                 <ChatListItem
                   onRemove={() => handleRemoveFriend(friend.email)}
-                  onChat={() => handleChatWithFriend(friend.id,friend.username)}
+                  onChat={() => handleChatWithFriend(friend._id,friend.username)}
                   category='Friends'
                   key={friend.id}
                   name={friend.username}

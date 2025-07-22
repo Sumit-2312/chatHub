@@ -3,17 +3,24 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { useDetalis } from "../recoil states/user details/user";
 import { toast } from "react-hot-toast"
 import AddGroupModal from "../recoil states/modals/AddGroupModal";
+import axios from "axios";
 
 const GroupModal = () => {
-  const userDetails = useRecoilValue(useDetalis);
+  const [userDetails,setUserDetails] = useRecoilState(useDetalis);
   const [memberInput, setMemberInput] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
   const [groupModal, setGroupModal] = useRecoilState(AddGroupModal);
+  const [membersToshow, setMembersToshow] = useState<string[]>([]);
 
   useEffect(() => {
-    setMembers([userDetails.username]); // current user added by default
+    setMembers([userDetails.id]); // current user added by default
+    setMembersToshow([userDetails.username]); // current user shown by default
   }, [userDetails.username]);
+
+  useEffect(()=>{
+    console.log(userDetails);
+  })
 
   const addMember = () => {
     const trimmed = memberInput.trim();
@@ -22,8 +29,14 @@ const GroupModal = () => {
       !members.includes(trimmed) &&
       userDetails.friends.some((f) => f.username === trimmed)
     ) {
-      setMembers((prev) => [...prev, trimmed]);
-      setMemberInput("");
+      const memberId = userDetails.friends.find((f) => f.username === trimmed)?._id ;
+      if (memberId) {
+        setMembers((prev) => [...prev, memberId]);
+        setMembersToshow((prev) => [...prev, trimmed]);
+        setMemberInput("");
+      } else {
+        toast.error("User not found in your friends list!");
+      }
     }
      else {
       toast.error("User not found in your friends list!");
@@ -32,13 +45,52 @@ const GroupModal = () => {
 
   const removeMember = (username: string) => {
     if (username === userDetails.username) return; // don't remove self
-    setMembers((prev) => prev.filter((m) => m !== username));
+    const memberId = userDetails.friends.find((f) => f.username === username)?._id;
+    if (!memberId) return; // user not found in friends list
+    setMembers((prev) => prev.filter((m) => m !== memberId));
+    setMembersToshow((prev) => prev.filter((m) => m !== username));
+
   };
 
-  const handleSubmit = () => {
-    if (members.length < 1) return;
+  const handleSubmit = async() => {
+    if (members.length < 1) {
+      toast.error("Please add at least one member.");
+      return;
+    };
 
     const nameToSend = members.length > 2 ? groupName.trim() : members[1];
+
+    try{
+      const response = await axios.post('http://localhost:5000/room/createRoom', {
+        name: nameToSend,
+        members: members.filter((m) => m !== userDetails.username), // exclude self
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      setUserDetails((prev)=>{
+        return{
+          ...prev, rooms: [...prev.rooms,{
+            id: response.data.room._id,
+            name: response.data.room.name,
+            member: response.data.room.members.map((m:any) => ({
+              id: m._id,
+              username: m.username,
+              email: m.email,
+              profilePicture: m.profilePicture || "",
+              discription: m.discription || ""
+            }))
+          }]
+        }
+      })
+      toast.success("Group created successfully!");
+      setGroupModal(false);
+    }catch(err:any){
+      toast.error(err?.response?.data?.message || "Failed to create group.");
+      setGroupModal(false);
+      return;
+    }
 
     if (members.length > 2 && !nameToSend) {
       toast.error("Please enter group name.");
@@ -99,12 +151,11 @@ const GroupModal = () => {
           )}
         </div>
 
-        {/* Members List */}
-        {members.length > 0 && (
+        {membersToshow.length > 0 && (
           <div className="mb-4">
             <p className="font-medium mb-2">Members:</p>
             <ul className="space-y-1">
-              {members.map((username, index) => (
+              {membersToshow.map((username, index) => (
                 <li key={index} className="flex justify-between items-center">
                   <span>{username}</span>
                   {username !== userDetails.username && (
@@ -122,7 +173,7 @@ const GroupModal = () => {
         )}
 
         {/* Group Name Input */}
-        {members.length > 2 && (
+        {membersToshow.length > 2 && (
           <div className="mb-4">
             <label className="block font-medium mb-1">Group Name</label>
             <input
@@ -136,9 +187,9 @@ const GroupModal = () => {
         )}
 
         {/* Auto-generated group name preview */}
-        {members.length === 2 && (
+        {membersToshow.length === 2 && (
           <div className="text-sm text-gray-600 italic mb-4">
-            Group name will be: <strong>{members[1]}</strong>
+            Group name will be: <strong>{membersToshow[1]}</strong>
           </div>
         )}
 

@@ -15,6 +15,7 @@ import GroupModal from "../components/GroupModal";
 import AddGroupModal from "../recoil states/modals/AddGroupModal";
 import SettingModal from "../components/SettingModal";
 import SettingModalState from "../recoil states/modals/SettingModal";
+import GroupSettingsModal from "../components/GroupSettingModal";
 
 function Dashboard() {
 
@@ -96,6 +97,8 @@ function Dashboard() {
         {OpenGroupModal && <GroupModal/>}
 
         {OpenSettingModal && <SettingModal/>}
+
+        <GroupSettingsModal/>
 
       </div>
   )

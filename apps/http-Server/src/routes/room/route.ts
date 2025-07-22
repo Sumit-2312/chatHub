@@ -1,5 +1,6 @@
 import express from "express";
 import { RoomModel, UserModel } from "@repo/database/db";
+import { IUser } from "@repo/database/types";
 const roomRouter = express.Router();
 
 // ------------------ Change Room Name ------------------
@@ -39,7 +40,8 @@ roomRouter.post("/changeRoomName", async (req: any, res: any) => {
 roomRouter.post("/createRoom", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { name,members } = req.body;
+    const { name, members } = req.body;
+    console.log("Creating room with name:", name, "and members:", members);
 
     if (!name) return res.status(400).json({ message: "Room name is required" });
 
@@ -48,20 +50,51 @@ roomRouter.post("/createRoom", async (req: any, res: any) => {
       return res.status(400).json({ message: "Room with this name already exists" });
     }
 
+    // Convert usernames to ObjectIds
+    const memberDocs = await UserModel.find({
+      _id: { $in: members }
+    }, '_id'); 
+
+    if (!memberDocs || memberDocs.length === 0) {
+      return res.status(400).json({ message: "No valid members found" });
+    }
+
+    console.log("Member ObjectIds:", memberDocs);
+    const memberIds = memberDocs.map((user:any) => user._id.toString());
+    console.log("Member IDs:", memberIds);
+
+    //  Add current user and remove duplicates
+    const allMembers = [...new Set([...memberIds, userId])];
+    console.log("All Members IDs:", allMembers);
+
+    //  Create room with valid ObjectIds only
     const newRoomDoc = await RoomModel.create({
       name,
-      members: Array.isArray(members) ? [...members, userId] : [userId],
+      members: allMembers,
       Admin: userId,
     });
+    console.log("New Room Document:", newRoomDoc);
 
-    const newRoom = await newRoomDoc.populate('members', "_id username email profilePicture discription");
+    const newRoom = await newRoomDoc.populate(
+      'members',
+      "_id username email profilePicture discription"
+    );
+    console.log("Populated New Room:", newRoom);
 
+    //  Add room to current user's rooms
     await UserModel.findByIdAndUpdate(userId, {
       $addToSet: { rooms: newRoom._id },
     });
 
+    //  Add room to each member's rooms
+    await UserModel.updateMany(
+      { _id: { $in: allMembers } },
+      { $addToSet: { rooms: newRoom._id } }
+    );
+
     return res.status(201).json({ message: "Room created", room: newRoom });
   } catch (err) {
+    console.error("Create Room Error:", err);
     return res.status(500).json({ message: "Internal Error", err });
   }
 });
