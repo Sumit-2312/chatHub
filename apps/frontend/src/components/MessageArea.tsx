@@ -13,12 +13,13 @@ function MessageArea() {
 
   const [allChats, setAllChats] = useRecoilState(Allmessages);
   const [messages,setMessages] = useState([]);
-  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState<WebSocket|null>(selectedChat);
-  const [ws,setWs] = useRecoilState(websocketState);
+  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState(selectedChat);
+  const [ws,setWs] = useRecoilState<WebSocket|null>(websocketState);
 
 
-  const Messagehandler = () =>{
-    console.log("Message handler called0");
+  const Messagehandler = (event:any) =>{
+    const data = JSON.parse(event.data);
+    console.log("Message recieved from websocket server: ",data);
   }
   
 useEffect(() => {
@@ -63,7 +64,7 @@ useEffect(() => {
     fetchMessages();
       if(ws){
         ws.addEventListener("message",(event)=>{
-            Messagehandler();
+            Messagehandler(event);
         })
       }
   }
