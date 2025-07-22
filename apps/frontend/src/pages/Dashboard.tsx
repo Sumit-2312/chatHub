@@ -15,7 +15,7 @@ import GroupModal from "../components/GroupModal";
 import AddGroupModal from "../recoil states/modals/AddGroupModal";
 import SettingModal from "../components/SettingModal";
 import SettingModalState from "../recoil states/modals/SettingModal";
-import websocketState from '../recoil states/websocket/websocket';
+import websocketState from "../recoil states/websocket/websocket";
 
 function Dashboard() {
 
@@ -48,7 +48,7 @@ function Dashboard() {
     },[]);
 
     useEffect(()=>{
-        console.log("websocket's socket: "ws);
+        console.log("websocket's socket: ",ws);
     },[ws])
 
     useEffect(()=>{

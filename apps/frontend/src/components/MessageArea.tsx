@@ -7,12 +7,19 @@ import Allmessages from "../recoil states/messages/roomMessage";
 import selectedChat from "../recoil states/chat/selectedChat";
 import toast from "react-hot-toast";
 import axios from 'axios';
+import websocketState from "../recoil states/websocket/websocket";
 
 function MessageArea() {
 
   const [allChats, setAllChats] = useRecoilState(Allmessages);
   const [messages,setMessages] = useState([]);
-  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState(selectedChat);
+  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState<WebSocket|null>(selectedChat);
+  const [ws,setWs] = useRecoilState(websocketState);
+
+
+  const Messagehandler = () =>{
+    console.log("Message handler called0");
+  }
   
 useEffect(() => {
   console.log(SelectedRoomId);
@@ -54,8 +61,13 @@ useEffect(() => {
 
   if (SelectedRoomId) {
     fetchMessages();
+      if(ws){
+        ws.addEventListener("message",(event)=>{
+            Messagehandler();
+        })
+      }
   }
-}, [SelectedRoomId]); // 🔥 Only run when the room changes
+}, [SelectedRoomId]); 
 
 
   return (
