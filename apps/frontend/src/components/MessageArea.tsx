@@ -8,14 +8,31 @@ import toast from "react-hot-toast";
 import axios from 'axios';
 import { useDetalis } from "../recoil states/user details/user";
 import { SelectedState } from "../recoil states/sidebar/sidebar";
+import websocketState from "../recoil states/websocket/websocket";
+import { input } from "motion/react-client";
 
 function MessageArea() {
 
   const [allChats, setAllChats] = useRecoilState(Allmessages);
-  const [messages,setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [SelectedRoomName, setSelectedRoomName ] = useRecoilState(selectedChat);
   const [userDetails ,setUserDetails] = useRecoilState(useDetalis);
   const [SelectedSidebar, setSelectedSidebar] = useRecoilState(SelectedState);
+  const [SelectedRoomId, setSelectedRoomId ] = useRecoilState(selectedChat);
+  const [ws,setWs] = useRecoilState<WebSocket|null>(websocketState);
+  const [inputMessage,setInputMessage] = useState("");
+
+
+  const Messagehandler = (event:any) =>{
+    const data = JSON.parse(event.data);
+    console.log("Message recieved from websocket server: ",data);
+    if(data.type === 'chat' && data.roomName === SelectedRoomName && data.messageType === 'text'){
+        setMessages((prevMessages:any)=>{
+          return [...prevMessages,{message:data.message, sender:data.sender}]
+        })
+        console.log(messages);
+    }
+  }
   
 useEffect(() => {
   console.log(SelectedRoomName);
@@ -63,8 +80,31 @@ useEffect(() => {
 
   if (SelectedRoomName && SelectedSidebar != 'Friends') {
     fetchMessages();
+    console.log("Fetched Messages from useEffect : ", messages);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        console.log("WebSocket is open, joining room:", SelectedRoomName);
+            ws.send(JSON.stringify({
+              type: 'joinRoom',
+              roomName: SelectedRoomName,
+            }));
+
+            // Clean up old listener to avoid duplication
+            ws.removeEventListener("message", Messagehandler);
+            ws.addEventListener("message", Messagehandler);
+      }
   }
+
+   return () => {
+    if (ws) {
+      ws.removeEventListener("message", Messagehandler);
+      ws.send(JSON.stringify({
+        type: 'leaveRoom',
+        roomName: SelectedRoomName
+      }))
+    }
+  };
 }, [SelectedRoomName]);
+
 
 
   return (
@@ -143,9 +183,28 @@ useEffect(() => {
           type="text"
           placeholder="Type a message"
           className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
         />
 
-        <IoSend className="text-xl text-blue-500 cursor-pointer" />
+        <IoSend  onClick={()=>{
+          if(!inputMessage.trim()){
+            toast.error("Message cannot be empty");
+            return;
+          }else{
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'chat',
+                roomName: SelectedRoomName,
+                messageType: 'text',
+                message: inputMessage,
+              }));
+              setInputMessage(""); 
+            } else {
+              toast.error("WebSocket is not connected");
+            }
+          }
+        }} className="text-xl text-blue-500 cursor-pointer" />
 
     {/* ----------------------------------------------------------------------------------------------------------------------------- */}
 

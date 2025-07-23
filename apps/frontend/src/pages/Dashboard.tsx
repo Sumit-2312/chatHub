@@ -16,6 +16,7 @@ import AddGroupModal from "../recoil states/modals/AddGroupModal";
 import SettingModal from "../components/SettingModal";
 import SettingModalState from "../recoil states/modals/SettingModal";
 import GroupSettingsModal from "../components/GroupSettingModal";
+import websocketState from "../recoil states/websocket/websocket";
 
 function Dashboard() {
 
@@ -26,11 +27,30 @@ function Dashboard() {
     const [OpenFriendModal,setOpenFriendModal] = useRecoilState(AddFriendModal);
     const [OpenGroupModal, setOpenGroupModal] = useRecoilState(AddGroupModal);
     const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
+    const [ws,setWs] = useRecoilState(websocketState);
 
     useEffect(()=>{
         const token = localStorage.getItem("token");
         if( !token ) navigate('/login');
+        else{
+            const socket = new WebSocket(`http://localhost:8080?token=${localStorage.getItem("token")}`);
+
+            socket.addEventListener("open",()=>{
+                console.log("Connected to websocket server");
+            })
+            socket.addEventListener('error', function (event) {
+              console.error('WebSocket error:', event);
+            });
+            socket.addEventListener('close', function (event) {
+              console.log('WebSocket connection closed:', event);
+            });
+            setWs(socket);
+        }
     },[]);
+
+    useEffect(()=>{
+        console.log("websocket's socket: ",ws);
+    },[ws])
 
     useEffect(()=>{
         // Logic to handle the state of the dashboard based on selection
@@ -98,7 +118,7 @@ function Dashboard() {
 
         {OpenSettingModal && <SettingModal/>}
 
-        <GroupSettingsModal/>
+        {/* <GroupSettingsModal/> */}
 
       </div>
   )

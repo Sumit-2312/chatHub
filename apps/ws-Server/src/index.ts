@@ -42,14 +42,14 @@ console.log("WebSocket server started on port 8080");
 // and we will send the message to all the clients who are subscribed to the room
 subscriber.subscribe("chatRoom",(message)=>{
   const data = JSON.parse(message);
-  const roomId = data.roomID;
+  const roomName = data.roomName;
   const messageContent = data.message;
   const senderId = data.userId || data.sender;
   clients.forEach((client)=>{
-    if( client.rooms.includes(roomId) && client.ws.readyState === WebSocket.OPEN){
+    if( client.rooms.includes(roomName) && client.ws.readyState === WebSocket.OPEN){
       client.ws.send(JSON.stringify({
         type: "chat",
-        roomID: roomId,
+        roomName: roomName,
         message: messageContent,
         sender: senderId
       }))

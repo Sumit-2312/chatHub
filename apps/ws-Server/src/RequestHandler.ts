@@ -1,4 +1,4 @@
-import { Message, TextMessage } from "@repo/database/db";
+import { Message, RoomModel, TextMessage } from "@repo/database/db";
 import { generate } from "./AIRespose";
 import { ClientInterface } from "./index";
 import { publisher } from "./Redis";
@@ -21,33 +21,35 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
     try{
 
               // JOIN ROOM  --> working properly
-            if (data.type === "joinRoom" && data.roomID) {
-                // console.log("datatype:",data.type, "dataRoomId : ",data.roomID);
+            if (data.type === "joinRoom" && data.roomName) {
+                // console.log("datatype:",data.type, "dataRoomId : ",data.roomName);
                 const client = clients.find((c) => c.userId === userId);
-                if (client && !client.rooms.includes(data.roomID)) {
-                client.rooms.push(data.roomID);
-                ws.send(JSON.stringify({ type: "joinedRoom", roomID: data.roomID }));
-                console.log(`User ${userId} joined room ${data.roomID}`);
+                if (client && !client.rooms.includes(data.roomName)) {
+                    client.rooms.push(data.roomName);
+                    console.log("Client rooms after join:", client.rooms);
+                    ws.send(JSON.stringify({ type: "joinedRoom", roomName: data.roomName }));
+                    console.log(`User ${userId} joined room ${data.roomName}`);
                 }
             }
 
             // LEAVE ROOM --> working properly
-            if (data.type === "leaveRoom" && data.roomID) {
+            if (data.type === "leaveRoom" && data.roomName) {
                 const client = clients.find((c) => c.userId === userId);
                 if (client) {
-                client.rooms = client.rooms.filter((room) => room !== data.roomID);
-                ws.send(JSON.stringify({ type: "leftRoom", roomID: data.roomID }));
-                console.log(`User ${userId} left room ${data.roomID}`);
+                client.rooms = client.rooms.filter((room) => room !== data.roomName);
+                ws.send(JSON.stringify({ type: "leftRoom", roomID: data.roomName }));
+                console.log(`Client room after leave: `,client.rooms);
+                console.log(`User ${userId} left room ${data.roomName}`);
                 }
             }
 
             // SEND MESSAGE --> Working properly
-            if (data.type === "chat" && data.roomID && data.message) {
+            if (data.type === "chat" && data.roomName && data.message) {
 
                 // use can only send the text message not the code
                 const sender = clients.find((c) => c.userId === userId);
 
-                if (!sender || !sender.rooms.includes(data.roomID)) {
+                if (!sender || !sender.rooms.includes(data.roomName)) {
                 ws.send(JSON.stringify({ type: "error", message: "You are not in this room" }));
                 return;
                 }
@@ -61,10 +63,16 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 // then send the message to publisher to broadcast to all connected clients
                 if( data.messageType == 'text' ){
 
-                    const {message, roomID} = data;
+                    const {message, roomName} = data;
+
+                    const roomId = await RoomModel.findOne({name: roomName},'_id');
+                    if (!roomId) {
+                        ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
+                        return;
+                    };
 
                     const newMessage = await TextMessage.create({
-                        ChatRoomId: roomID,
+                        ChatRoomId: roomId,
                         sender: userId,
                         messageType: "text",
                         content : message
@@ -74,7 +82,7 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     await publisher.publish("chatRoom", JSON.stringify({
                         type: "chat",
                         messageType: data.messageType,
-                        roomID: data.roomID,
+                        roomName: data.roomName,
                         message: data.message,
                         sender: userId
                     }));
@@ -84,7 +92,7 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     await publisher.publish("chatRoom", JSON.stringify({
                         type: 'chat',
                         messageType: data.messageType,
-                        roomID: data.roomID,
+                        roomName: data.roomName,
                         url: data.url,
                         sender: userId
                     }));
