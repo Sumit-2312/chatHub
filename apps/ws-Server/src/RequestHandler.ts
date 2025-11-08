@@ -1,11 +1,11 @@
-import { Message, RoomModel, TextMessage } from "@repo/database/db";
+import { Message, RoomModel } from "@repo/database/db";
 import { generate } from "./AIRespose";
 import { ClientInterface } from "./index";
 import { publisher } from "./Redis";
 
 export default async function Handler(data:any,userId:string,clients:ClientInterface[]){
 
-
+    console.log(clients);
 
     const ws = clients.find((client)=>{
         if( client.userId === userId){
@@ -20,17 +20,31 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
 
     try{
 
-              // JOIN ROOM  --> working properly
+            // JOIN ROOM  --> working properly
             if (data.type === "joinRoom" && data.roomName) {
-                // console.log("datatype:",data.type, "dataRoomId : ",data.roomName);
+                console.log("Join request entered into handler function");
                 const client = clients.find((c) => c.userId === userId);
-                if (client && !client.rooms.includes(data.roomName)) {
-                    client.rooms.push(data.roomName);
-                    console.log("Client rooms after join:", client.rooms);
+                if (!client) return;
+
+                // If already in a room, automatically leave it
+                if (client.rooms.length > 0) {
+                    const previousRoom = client.rooms[0];
+                    if( previousRoom != data.roomName){
+                        client.rooms = [];
+                        client.rooms = [data.roomName];
+                        ws.send(JSON.stringify({ type: "joinedRoom", roomName: data.roomName }));
+                        console.log(`User ${userId} switched from room ${previousRoom} to room ${data.roomName}`);
+                        return;
+                    }
+                }
+                else{
+                    client.rooms = [data.roomName];
                     ws.send(JSON.stringify({ type: "joinedRoom", roomName: data.roomName }));
                     console.log(`User ${userId} joined room ${data.roomName}`);
+                    return;
                 }
             }
+
 
             // LEAVE ROOM --> working properly
             if (data.type === "leaveRoom" && data.roomName) {
@@ -50,8 +64,8 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 const sender = clients.find((c) => c.userId === userId);
 
                 if (!sender || !sender.rooms.includes(data.roomName)) {
-                ws.send(JSON.stringify({ type: "error", message: "You are not in this room" }));
-                return;
+                    ws.send(JSON.stringify({ type: "error", message: "You are not in this room" }));
+                    return;
                 }
 
                 // use can send the text, image, file message
@@ -70,21 +84,29 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                         ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
                         return;
                     };
-
-                    const newMessage = await TextMessage.create({
-                        ChatRoomId: roomId,
+                    //@ts-ignore
+                    const newMessage = await Message.create({
+                        ChatRoomId: roomId._id,
                         sender: userId,
-                        messageType: "text",
-                        content : message
+                        messageType: data.messageType,
+                        content: data.message,            
+                        senderType: "user"                
                     });
 
+
                     console.log("Message stored in database:", newMessage);
-                    await publisher.publish("chatRoom", JSON.stringify({
-                        type: "chat",
+                    console.log("Message sent to publisher:", {
+                        type: 'chat',
                         messageType: data.messageType,
                         roomName: data.roomName,
-                        message: data.message,
-                        sender: userId
+                        message: newMessage.toObject()
+                    });
+                    await publisher.publish("chatRoom", JSON.stringify({
+                        roomName: data.roomName,
+                        content:{
+                            ...newMessage.toObject(),
+                            roomName: data.roomName
+                        }
                     }));
                 }
 
@@ -101,34 +123,66 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
 
             }
             
-            if (data.type === "AiChat" && data.roomID && data.query ) {
+            if (data.type === "AiChat" && data.roomName && data.query ) {
+
+                let AI_USER_ID = "671f6a7e23e3b27e5412d890"; // Default AI user ID
 
                 const sender = clients.find((c) => c.userId === userId);
-                if (!sender || !sender.rooms.includes(data.roomID)) {
+                if (!sender || !sender.rooms.includes(data.roomName)) {
                     ws.send(JSON.stringify({ type: "error", message: "You are not in this room" }));
                     return;
                 }
                 // Generate AI response
+                const roomId = await RoomModel.findOne({name: data.roomName},'_id');
+                if (!roomId) {
+                    ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
+                    return;
+                };
                 const aiResponse = await generate(data.query);
                 if (!aiResponse) {
                     ws.send(JSON.stringify({ type: "error", message: "AI response generation failed" }));
                     return;
                 }
-                // Store AI response in the database
-                const newMessage = await TextMessage.create({   
-                    ChatRoomId: data.roomID,
-                    sender: "AI", // Assuming AI responses are identified by "AI"
+                // Store the User message in the database
+                //@ts-ignore
+                const newMsg = await Message.create({   
+                    ChatRoomId: roomId._id,
+                    sender: data.sender, // Assuming AI responses are identified by "AI"
                     messageType: "text",
-                    content: aiResponse
+                    content: data.query,
+                    senderType: 'user'
                 });
-                console.log("AI Response stored in database:", newMessage);
+                const newMessage = await newMsg.populate('sender','_id username email profilePicture discription');
+
+                console.log("User Message stored in database:", newMessage);
+
+                // now store the AI response in the database
+                //@ts-ignore
+                const aiMsg = await Message.create({
+                    ChatRoomId: roomId._id,
+                    sender: AI_USER_ID, // Assuming AI responses are identified by "AI"
+                    messageType: "text",
+                    content: aiResponse,
+                    senderType: 'AI'
+                });
+
+                const aiMessage = await aiMsg.populate('sender','_id username email profilePicture discription');
+
+                console.log("AI Response stored in database:", aiMessage);
                 // Publish AI response to the chat room
                 await publisher.publish("chatRoom", JSON.stringify({
-                    type: "AiChat",
-                    messageType: "text",
-                    roomID: data.roomID,
-                    message: aiResponse,
-                    sender: "AI"
+                    roomName: data.roomName,
+                    content: {
+                        ...newMessage.toObject(),
+                        roomName: data.roomName
+                    }
+                }));   
+                await publisher.publish("chatRoom", JSON.stringify({
+                    roomName: data.roomName,
+                    content : {
+                        ...aiMessage.toObject(),
+                        roomName: data.roomName
+                    }
                 }));   
             }
 

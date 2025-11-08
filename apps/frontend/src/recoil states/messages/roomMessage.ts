@@ -1,19 +1,8 @@
 import { atom } from "recoil";
 
-const Allmessages = atom({
+const Allmessages = atom<any[]>({
     key: "messages",
-    default : {
-    id: "",
-    username : "",
-    email : "",
-    chats:{
-        "":[{
-            messageType:"", // text, image, files
-            content: "",
-            sender: "",
-            }]
-    }
-}
+    default : []
 })
 
 export default Allmessages;

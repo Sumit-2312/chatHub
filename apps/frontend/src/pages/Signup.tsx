@@ -36,7 +36,6 @@ const Signup: React.FC = () => {
       });
 
       toast.success(response.data.message);
-      console.log('Response:', response.data);
       navigate('/login');
     } catch (err: any) {
       toast.error(err.response.data.message);

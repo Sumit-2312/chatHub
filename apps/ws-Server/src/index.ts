@@ -42,17 +42,12 @@ console.log("WebSocket server started on port 8080");
 // and we will send the message to all the clients who are subscribed to the room
 subscriber.subscribe("chatRoom",(message)=>{
   const data = JSON.parse(message);
-  const roomName = data.roomName;
-  const messageContent = data.message;
-  const senderId = data.userId || data.sender;
+  console.log("Received message from Redis Pub/Sub:", data);
+  console.log("message to be sent on frontend" , data.content);
+
   clients.forEach((client)=>{
-    if( client.rooms.includes(roomName) && client.ws.readyState === WebSocket.OPEN){
-      client.ws.send(JSON.stringify({
-        type: "chat",
-        roomName: roomName,
-        message: messageContent,
-        sender: senderId
-      }))
+    if( client.rooms.includes(data.roomName) && client.ws.readyState === WebSocket.OPEN){
+      client.ws.send(JSON.stringify(data.content))
     }
   })
 })
@@ -89,10 +84,10 @@ server.on("connection", async (ws: WebSocket, req: any) => {
 
 
     let userId : string  = req.userId;
-    let user = req.user;
+    clients = clients.filter(c => c.userId !== userId || c.ws.readyState === WebSocket.OPEN);
     // Add to clients list
     clients.push({ userId, ws, rooms: [] });
-    console.log(`User ${userId} connected`);
+    console.log(`User ${userId} connected with socket: ${ws}`);
 
 
 
@@ -104,7 +99,7 @@ server.on("connection", async (ws: WebSocket, req: any) => {
     try {
 
       const data = JSON.parse(rawData.toString());
-      console.log("Received message:", data);
+      console.log("Received message on websocket:", data);
       // on message is triggered when the client sends a message
       // we broadcast the message to all the clients with handler function
       await Handler(data, userId, clients);  // userId here indicates the user who recieves the message

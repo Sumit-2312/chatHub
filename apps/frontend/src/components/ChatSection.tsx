@@ -54,7 +54,6 @@ function ChatSection() {
 
   const handleRemoveFriend = async(email: string) => {
     // Logic to remove friend
-    console.log(`Removing friend with email: ${email}`);
     try{
       const response = await axios.post('http://localhost:5000/user/removeFriend',{
         friendEmail : email
@@ -75,7 +74,6 @@ function ChatSection() {
   };
 
   const handleRemoveArchived = async(email: string) => {
-    console.log(`Removing archived chat with email: ${email}`);
     // Logic to remove archived chat
     try{
       const response = await axios.post('http://localhost:5000/user/removeFromArchived',{
@@ -98,7 +96,6 @@ function ChatSection() {
 
   const handleRemoveChat = async(name: string) => {
     // Logic to remove chat
-    console.log(`Removing chat with Room Name: ${name}`);
     try{
       const response = await axios.post('http://localhost:5000/room/deleteRoom',{
         name
@@ -121,7 +118,6 @@ function ChatSection() {
 
   const handleRemoveFavourite = async(email: string) => {
     // Logic to remove favourite
-    console.log(`Removing favourite with email: ${email}`);
     try{
       const response = await axios.post('http://localhost:5000/user/removeFromFavourites',{
         friendEmail: email
@@ -144,7 +140,6 @@ function ChatSection() {
 
   const handleRemoveBlocked = async(email: string) => {
     // Logic to remove blocked user
-    console.log(`Removing blocked user with email: ${email}`);
     try{
       const response = await axios.post('http://localhost:5000/user/removeFromBlocked',{
         friendEmail: email
@@ -165,7 +160,6 @@ function ChatSection() {
 
   const handleChatWithFriend = async(id: string,name:string) => {
     // Logic to start chat with friend
-    console.log(`Starting chat with friend: ${id}`);
     try{
       const response = await axios.post('http://localhost:5000/room/createRoom',{
         name,
@@ -196,7 +190,6 @@ function ChatSection() {
   };
 
   useEffect(() => {
-    console.log(userDetail);
     if (resizing) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);

@@ -30,7 +30,6 @@ function SettingModal() {
   };
 
   const handleSave = async() => {
-    console.log({ username, description, oldPassword, newPassword, confirmPassword, profilePicture });
     try{
         const response = await axios.post('http://localhost:5000/user/updateProfile',{
             username,

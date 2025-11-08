@@ -18,9 +18,7 @@ const GroupModal = () => {
     setMembersToshow([userDetails.username]); // current user shown by default
   }, [userDetails.username]);
 
-  useEffect(()=>{
-    console.log(userDetails);
-  })
+
 
   const addMember = () => {
     const trimmed = memberInput.trim();

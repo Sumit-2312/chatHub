@@ -15,9 +15,7 @@ const Login: React.FC = () => {
         password,
       });
 
-      console.log('Login successful:', response.data);
       localStorage.setItem('token', response.data.token);
-      console.log("token in localStorage: ", localStorage.getItem("token"));
       
       // Show success toast
       toast.success('Successfully logged in!');

@@ -24,7 +24,7 @@ export const generate = async (query: string): Promise<string> => {
             }
         ],
         config: {
-        systemInstruction: "You are a senior web developer with expertise in production ready code and best practices. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses.",
+        systemInstruction: "You are a senior web developer with expertise in production ready code and best practices. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses. Make sure to be brief but without missing any important details.",
         },
     });
     console.log(response.text);

@@ -4,6 +4,11 @@ import { useRecoilState } from "recoil";
 import selectedChat from "../recoil states/chat/selectedChat";
 import { BsThreeDots } from "react-icons/bs";
 import { useState } from "react";
+import websocketState from "../recoil states/websocket/websocket";
+import axios from "axios";
+import toast from "react-hot-toast";
+import Allmessages from "../recoil states/messages/roomMessage";
+
 
 interface Props {
   name: string;
@@ -22,10 +27,57 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
 
   const [SelectedChat,setSelectedChat] = useRecoilState(selectedChat);
   const [clicked,setClicked] = useState(false);
+  const [ws, setWs] = useRecoilState<WebSocket | null>(websocketState);
+  const [messages,setMessages] = useRecoilState(Allmessages);
+  
+    const fetchMessages = async () => {
+      try {
+        console.log("Trying to fetch messages for room: ", name);
+        const response = await axios.get(`http://localhost:5000/chat/`, {
+          params: { roomName: name },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+  
+        const normalized = (response.data.chats || []).map((msg: any) => ({
+          ...msg,
+          sender:
+            msg.sender ||
+            (msg.senderType === "AI"
+              ? { _id: "AI", username: "AI Assistant", profilePicture: "" }
+              : null)
+        }));
+  
+        setMessages(normalized);
+      } catch (err: any) {
+        console.error("Error fetching messages:", err.message);
+        toast.error("Failed to fetch messages");
+      }
+    };
+  
+
+  const joinWebSocketRoom = ()=>{
+      if( ws && ws.readyState === WebSocket.OPEN ){
+        ws.send( JSON.stringify({ type: "joinRoom", roomName: name }) );
+        console.log(`Sent joinRoom request for room: ${name}`);
+      }
+      else {
+        console.log("Failed to join room, WebSocket not connected");
+      }
+  }
+
+  const  handleClicked = async ()=>{
+    setSelectedChat(name ?? "");
+    if( category === 'Chats' ){
+      // we also need to join the websocket room here
+      joinWebSocketRoom();
+      await fetchMessages();
+      console.log("Fetched the messages for the selected chat room");
+    }
+  }
 
 
   return (
-  <div onMouseLeave={()=>setClicked(false)} onClick={()=>setSelectedChat(name ?? "")} className={` ${SelectedChat === name ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group`}>
+  <div onMouseLeave={()=>setClicked(false)} onClick={handleClicked} className={` ${SelectedChat === name ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group `}>
       
       <div className="flex items-center gap-3">
         <div className="relative">
@@ -49,6 +101,7 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
       </div>
       </div>
 
+        {/* Three dots in the top right corner for options */}
       <div className="hidden relative group-hover:block ">
         <BsThreeDots onClick={()=>setClicked((prev)=>!prev)}  className=" size-5 hover:text-blue-500" />
         {clicked && (
@@ -72,6 +125,7 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
           </div>
         )} 
       </div>
+
     </div>
   );
 }

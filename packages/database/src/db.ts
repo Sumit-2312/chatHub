@@ -1,7 +1,12 @@
 import mongoose, { Schema, model } from "mongoose";
-import { IRoom, IUser } from "./types/route";
+import { IMessage, IRoom, IUser } from "./types/route";
+
+
+
+
 
 // -------------------- User Schema --------------------
+
 const UserSchema = new Schema<IUser>(
   {
     username: {
@@ -33,7 +38,12 @@ const UserSchema = new Schema<IUser>(
 const UserModel: mongoose.Model<IUser> =
   mongoose.models.User || model<IUser>("User", UserSchema);
 
+
+
+
+
 // -------------------- Room Schema --------------------
+
 const RoomSchema = new Schema<IRoom>(
   {
     name: {
@@ -50,8 +60,14 @@ const RoomSchema = new Schema<IRoom>(
 const RoomModel: mongoose.Model<IRoom> =
   mongoose.models.Room || model<IRoom>("Room", RoomSchema);
 
+
+
+
+
+
 // -------------------- Base Message Schema --------------------
-const baseMessageSchema = new Schema(
+
+const baseMessageSchema = new Schema<IMessage>(
   {
     ChatRoomId: {
       type: Schema.Types.ObjectId,
@@ -62,60 +78,32 @@ const baseMessageSchema = new Schema(
       type: String,
       enum: ["text", "image", "file"],
       required: true
+    },
+    content:{
+      type: String,
+      required: true
+    },
+    senderType: {
+      type: String,
+      enum: ["user", "AI"],
+      default: "user",
+      required: true
+    },
+    sender:{
+      type: Schema.Types.ObjectId,
+      ref: "User",
     }
-  },
-  {
-    discriminatorKey: "messageType", 
-    collection: "messages",
+  },{
     timestamps: true
   }
 );
 
 const Message =
-  mongoose.models.Message || model("Message", baseMessageSchema);
-
-// -------------------- Text Message --------------------
-const textSchema = new Schema({
-  content: { type: String, required: true },
-  sender: {
-    type: Schema.Types.Mixed,
-    required: true,
-    validate: {
-      validator: function (v: any) {
-        return (
-          mongoose.Types.ObjectId.isValid(v) ||
-          (typeof v === "string" && v === "AI")
-        );
-      },
-      message: "Sender must be a valid ObjectId or 'AI'"
-    }
-  }
-});
-
-const TextMessage =
-  mongoose.models.TextMessage || Message.discriminator("text", textSchema);
-
-// -------------------- File Message --------------------
-const fileSchema = new Schema({
-  url: { type: String, required: true },
-  sender: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "User"
-  },
-  filename: String,
-  filetype: String,
-  size: Number
-});
-
-const FileMessage =
-  mongoose.models.FileMessage || Message.discriminator("file", fileSchema);
+  mongoose.models.Message || model<IMessage>("Message", baseMessageSchema);
 
 // -------------------- Exports --------------------
 export {
   UserModel,
   RoomModel,
   Message,
-  TextMessage,
-  FileMessage
 };

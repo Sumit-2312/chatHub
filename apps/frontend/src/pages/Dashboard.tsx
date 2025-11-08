@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/sidebar";
 import { haveAnySelectedState } from "../recoil states/sidebar/sidebar";
@@ -17,6 +17,8 @@ import SettingModal from "../components/SettingModal";
 import SettingModalState from "../recoil states/modals/SettingModal";
 import GroupSettingsModal from "../components/GroupSettingModal";
 import websocketState from "../recoil states/websocket/websocket";
+import selectedChat from "../recoil states/chat/selectedChat";
+import Allmessages from "../recoil states/messages/roomMessage";
 
 function Dashboard() {
 
@@ -28,15 +30,51 @@ function Dashboard() {
     const [OpenGroupModal, setOpenGroupModal] = useRecoilState(AddGroupModal);
     const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
     const [ws,setWs] = useRecoilState(websocketState);
+    const currentRoomName = useRecoilValue(selectedChat);
+    const [messages,setMessages] = useRecoilState<any[]>(Allmessages);
+
+    const currentRoomRef = useRef(currentRoomName);
+    const userRef = useRef(userDtls);
+
+    useEffect(() => { currentRoomRef.current = currentRoomName; }, [currentRoomName]);
+    useEffect(() => { userRef.current = userDtls; }, [userDtls]);
+
 
     useEffect(()=>{
         const token = localStorage.getItem("token");
         if( !token ) navigate('/login');
         else{
-            const socket = new WebSocket(`http://localhost:8080?token=${localStorage.getItem("token")}`);
+            const socket = new WebSocket(`ws://localhost:8080?token=${localStorage.getItem("token")}`);
 
             socket.addEventListener("open",()=>{
+                toast.success("WebSocket connected successfully");
                 console.log("Connected to websocket server");
+                console.log("socket: ",socket);
+                // setInterval(() => {
+                //     socket.send(JSON.stringify({ type: "ping", time: Date.now() }));
+                // }, 3000);
+
+                // setting up the onMEssage handler
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    console.log("Received message from websocket:", data);
+
+                    if (data.messageType === "text" && data.roomName === currentRoomRef.current) {
+                        if(data.sender != userRef.current.id ){
+                            console.log("MEssages are updated");
+                            setMessages((prev) => [...prev, data]);
+                        }
+                    } else if (data.type === "joinedRoom" || data.type === "leftRoom") {
+                        toast.success(
+                            `You have ${data.type === "joinedRoom" ? "joined" : "left"} ${
+                                data.roomName
+                            }`
+                        );
+                    } else if (data.type === "error") {
+                        toast.error(data.message);
+                    }
+                };
+                console.log("WebSocket onmessage handler set up");
             })
             socket.addEventListener('error', function (event) {
               console.error('WebSocket error:', event);
@@ -45,12 +83,13 @@ function Dashboard() {
               console.log('WebSocket connection closed:', event);
             });
             setWs(socket);
+            return ()=>{
+                socket.close();
+            }
         }
     },[]);
 
-    useEffect(()=>{
-        console.log("websocket's socket: ",ws);
-    },[ws])
+
 
     useEffect(()=>{
         // Logic to handle the state of the dashboard based on selection
@@ -98,9 +137,7 @@ function Dashboard() {
         fetchUserDetails();
     },[]);
 
-    useEffect(()=>{
-        console.log(userDtls)
-    },[userDtls]);
+
 
 
   return (
