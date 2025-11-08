@@ -20,8 +20,9 @@ const schema = {
     required: ["type", "content"]
   }
 };
+const history: Record<string,any[]> = {};
 
-export const generate = async (query: string): Promise<any> => {
+export const generate = async (query: string,userId: string): Promise<any> => {
   try {
     const instruction = ` 
                   You are an expert in each field ( fullStack , coding , psychology).
@@ -48,12 +49,17 @@ export const generate = async (query: string): Promise<any> => {
 
               `;
 
+      //normaly we pass the query in content with format [{role:"user",parts:[{text:query}]}]
+      // but here we are maintaining history for each user
+      // we can create history array and push each query and respons to ai
+      if( !history[userId]){
+        history[userId] = [];
+      }
+      history[userId].push({ role: "user", parts: [{ text: query }] });
+
     const response = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: [{
-          role: "user",
-          parts: [{ text: query }]
-        }],
+      contents: [...history[userId]],
       config: {
         systemInstruction: instruction,
         responseMimeType: "application/json",
@@ -72,6 +78,8 @@ export const generate = async (query: string): Promise<any> => {
       console.log(error);
       parsed = response.text;
     }
+
+    history[userId].push({role:"model",parts:[{text:JSON.stringify(parsed)}]});
 
     console.log("Gemini API Structured Output:", parsed);
     return parsed;
