@@ -10,6 +10,9 @@ import { motion } from "motion/react"
 import { useEffect, useState } from "react"
 import SettingModalState from "../recoil states/modals/SettingModal"
 import { IoLogOutOutline } from "react-icons/io5"
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"
+
 
 function Sidebar() {
 
@@ -17,6 +20,7 @@ function Sidebar() {
     const haveSelected = useRecoilValue(haveAnySelectedState);
     const [Open , setOpen ] = useState(true);
     const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
+    const navigate = useNavigate();
 
     const handleOpenSettingModal = () => {
         setOpenSettingModal(true);
@@ -96,7 +100,11 @@ function Sidebar() {
                 <CgProfile title="Profile" onClick={handleOpenSettingModal} className="h-full w-full text-white" />
             </div>
             <div className="h-7 w-7 hover:cursor-pointer rounded-full relative">
-                <IoLogOutOutline title="logout" onClick={()=>localStorage.removeItem('token')} className="h-full w-full text-white" />
+                <IoLogOutOutline title="logout" onClick={()=>{
+                    localStorage.removeItem("token");
+                    navigate('/login');
+                    toast.success("Logged out");
+                }} className="h-full w-full text-white" />
             </div>
         </div>
 

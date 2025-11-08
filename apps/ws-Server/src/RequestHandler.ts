@@ -138,7 +138,8 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
                     return;
                 };
-                const aiResponse = await generate(data.query);
+                const aiRes = await generate(data.query);
+                const aiResponse = JSON.stringify(aiRes);
                 if (!aiResponse) {
                     ws.send(JSON.stringify({ type: "error", message: "AI response generation failed" }));
                     return;

@@ -31,6 +31,12 @@ function App() {
                   background: '#ef4444',
                 },
               },
+              loading:{
+                style:{
+                  background: '#000000',
+                  color: '#e0e0e0'
+                }
+              }
             }}
           />
           <Routes>

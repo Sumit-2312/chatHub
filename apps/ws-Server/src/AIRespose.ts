@@ -7,30 +7,81 @@ if (!gemini_api_key) {
   throw new Error("API key missing. Please check your .env file.");
 }
 
-const genAI = new GoogleGenAI({apiKey: gemini_api_key});
+const genAI = new GoogleGenAI({ apiKey: gemini_api_key });
 
-export const generate = async (query: string): Promise<string> => {
+const schema = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      type: { type: "string" },      // e.g. "theory" or "code"
+      content: { type: "string" }    // explanation or code snippet
+    },
+    required: ["type", "content"]
+  }
+};
 
-
+export const generate = async (query: string): Promise<any> => {
   try {
-    
+    const instruction = ` 
+                  You are an expert in each field ( fullStack , coding , psychology).
+                  You must always respond in JSON format that matches the schema:
+                  [
+                    {
+                      "type": "theory",
+                      "content": "Explain the concept briefly and clearly"
+                    },
+                    {
+                      "type": "code",
+                      "content": "Code snippet in markdown format"
+                    }
+                  ]
+
+                  Rules:
+                  1. If the user asks for code, include both theory and code.
+                  2. Always wrap the code inside triple backticks (\`\`\`js ... \`\`\`).
+                  3. Do not include any greetings, extra text, or explanations outside JSON.
+                  4. The response MUST be valid JSON that can be parsed directly.
+                  5. use markdown format for both theory and code content.
+                  6. Add heading and subheading into theory content using markdown format.
+                  7. Don't give code part unneccasarily if user didn't ask for it.
+
+              `;
+
     const response = await genAI.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [
-            {
-            role: "user",
-            parts: [{ text: `You are a senior web developer with expertise in production ready code and best practices.You don't miss any edge cases and always give the optimal and modularized code. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses. Use proper markdown formatting for code blocks. 
-              Question is : ${query}` }],
-            }
-        ],
-        config: {
-        systemInstruction: "You are a senior web developer with expertise in production ready code and best practices. You are also a senior AI engineer with expertise in AI models and their applications. You are a professional consultant who provides detailed and structured responses. Make sure to be brief but without missing any important details.",
-        },
+      model: "gemini-2.5-flash",
+      contents: [{
+          role: "user",
+          parts: [{ text: query }]
+        }],
+      config: {
+        systemInstruction: instruction,
+        responseMimeType: "application/json",
+        responseSchema: schema,
+        temperature: 0.7,
+        maxOutputTokens: 800,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
     });
-    console.log(response.text);
-    return response.text || "No response from Gemini model.";
+
+    // Safely parse JSON response
+    let parsed;
+    try {
+      parsed = JSON.parse(response.text || "[]");
+    } catch(error) {
+      console.log(error);
+      parsed = response.text;
+    }
+
+    console.log("Gemini API Structured Output:", parsed);
+    return parsed;
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Sorry, I am unable to process your request at the moment. Please try again later.";
+    console.log("Gemini API Error:", error);
+    return [
+      {
+        type: "theory",
+        content: "Sorry, I couldn’t process your request at the moment."
+      }
+    ];
   }
 };
