@@ -6,3 +6,8 @@ Follow this for Gemini API integration:
     https://ai.google.dev/gemini-api/docs/text-generation
 
 
+How to run the project: 
+  - go to root folder
+  - npm i
+  - npm run dev
+

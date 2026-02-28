@@ -14,6 +14,7 @@ function FriendModal() {
   const [userDetails, setUserDetails] = useRecoilState(useDetalis);
   
   const handleAdd = async() =>{
+    if(loading) return; // blocks the api request after continue clicking
     setLoading(true);
     try{
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/user/addFriend`,{
@@ -42,6 +43,7 @@ function FriendModal() {
           })
           toast.success("Friend added successfully");
           setIsOpen(false);
+          setLoading(false);
         }
         else{
           throw new Error(response.data.message || "Failed to add friend");
@@ -74,12 +76,14 @@ function FriendModal() {
         />
 
         <div className="flex justify-end gap-3">
+          {/* Cancel button-> setIsOpen to false -> ultimately closes the friendsModal */}
           <button
             onClick={()=>setIsOpen(false)}
             className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-sm text-black font-semibold"
           >
             Cancel
           </button>
+
           <button
             onClick={handleAdd}
             className={` ${loading? "bg-green-300 text-black hover:cursor-not-allowed":"bg-blue-500 hover:bg-blue-700"} px-4 py-2 rounded-md font-semibold  text-white text-sm`}

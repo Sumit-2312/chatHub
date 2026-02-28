@@ -53,18 +53,20 @@ const user = await UserModel.findById(userId)
 
 userRouter.post("/addFriend",async(req:any,res:any)=>{
   try{
-    const userId = req.userId;
-    const {username} = req.body;
+    const userId = req.userId;  // userid of the current user who sent req the req to add friend
+    const {username} = req.body; // username of the friend to be added
 
     if (!userId || !username) {
       return res.status(400).json({ message: "User ID and friend username are required" });
     }
-    const friend = await UserModel.findOne({ username });
+    const friend = await UserModel.findOne({ username }); 
     if (!friend) {
       return res.status(404).json({ message: "Friend not found" });
     }
+    else if( friend.id == userId ) return res.status(404).json({message: "Can't add yourself"});
 
     const user = await UserModel.findById(userId);
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

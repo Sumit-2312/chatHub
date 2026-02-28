@@ -56,13 +56,13 @@ function Sidebar() {
 
             <div className="flex flex-col gap-5 w-full  items-center justify-start">
                 <SidebarItem
-                title="Chats"
-                icon={FiMessageCircle}
-                isActive={Selected === "Chats"}
-                onClick={() => {
-                    if( Selected === 'Chats') return setSelected("");
-                    else return setSelected("Chats");
-                }}
+                    title="Chats"
+                    icon={FiMessageCircle}
+                    isActive={Selected === "Chats"}
+                    onClick={() => {
+                        if( Selected === 'Chats') return setSelected("");
+                        else return setSelected("Chats");
+                    }}
                 />
                 <SidebarItem
                     title="Friends"

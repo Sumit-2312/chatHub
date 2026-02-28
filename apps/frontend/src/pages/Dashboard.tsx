@@ -15,7 +15,6 @@ import GroupModal from "../components/GroupModal";
 import AddGroupModal from "../recoil states/modals/AddGroupModal";
 import SettingModal from "../components/SettingModal";
 import SettingModalState from "../recoil states/modals/SettingModal";
-import GroupSettingsModal from "../components/GroupSettingModal";
 import websocketState from "../recoil states/websocket/websocket";
 import selectedChat from "../recoil states/chat/selectedChat";
 import Allmessages from "../recoil states/messages/roomMessage";
@@ -37,7 +36,7 @@ function Dashboard() {
     const userRef = useRef(userDtls);
 
     useEffect(() => { currentRoomRef.current = currentRoomName; }, [currentRoomName]);
-    useEffect(() => { userRef.current = userDtls; }, [userDtls]);
+    useEffect(() => { userRef.current = userDtls }, [userDtls]);
 
 
     useEffect(()=>{
@@ -102,6 +101,8 @@ function Dashboard() {
 
     // fetch details of user from the server on mount
     useEffect(()=>{
+          const token = localStorage.getItem("token");
+            if (!token) return;
         const fetchUserDetails = async()=>{
             try{
                 const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/user/userDetails`,{

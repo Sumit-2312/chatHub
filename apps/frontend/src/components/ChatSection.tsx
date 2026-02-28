@@ -161,7 +161,7 @@ function ChatSection() {
   const handleChatWithFriend = async(id: string,name:string) => {
     // Logic to start chat with friend
     try{
-      const response = await axios.post('http://localhost:5000/room/createRoom',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/createRoom`,{
         name,
         members:[id]
       },{
