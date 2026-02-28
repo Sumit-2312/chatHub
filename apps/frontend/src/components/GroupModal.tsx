@@ -43,6 +43,7 @@ const GroupModal = () => {
 
   const removeMember = (username: string) => {
     if (username === userDetails.username) return; // don't remove self
+    //@ts-ignore
     const memberId = userDetails.friends.find((f) => f.username === username)?._id;
     if (!memberId) return; // user not found in friends list
     setMembers((prev) => prev.filter((m) => m !== memberId));
@@ -59,7 +60,7 @@ const GroupModal = () => {
     const nameToSend = members.length > 2 ? groupName.trim() : members[1];
 
     try{
-      const response = await axios.post('http://localhost:5000/room/createRoom', {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/createRoom`, {
         name: nameToSend,
         members: members.filter((m) => m !== userDetails.username), // exclude self
       }, {

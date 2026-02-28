@@ -33,7 +33,7 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
     const fetchMessages = async () => {
       try {
         console.log("Trying to fetch messages for room: ", name);
-        const response = await axios.get(`http://localhost:5000/chat/`, {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/chat/`, {
           params: { roomName: name },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });

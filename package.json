@@ -1,5 +1,5 @@
 {
-  "name": "ChatHub",
+  "name": "chathub",
   "private": true,
   "scripts": {
     "build": "turbo run build",

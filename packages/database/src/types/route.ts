@@ -1,7 +1,5 @@
 import { Document, Types } from "mongoose";
 
-
-
  export interface IMessage extends Document {
   ChatRoomId: Types.ObjectId;
   sender?: Types.ObjectId;

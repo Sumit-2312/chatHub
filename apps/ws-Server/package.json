@@ -21,6 +21,7 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
-    "@repo/database": "*"
+    "@repo/database": "*",
+    "nodemon": "^3.1.14"
   }
 }

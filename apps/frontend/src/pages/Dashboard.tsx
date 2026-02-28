@@ -104,7 +104,7 @@ function Dashboard() {
     useEffect(()=>{
         const fetchUserDetails = async()=>{
             try{
-                const response = await axios.get("http://localhost:5000/user/userDetails",{
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/user/userDetails`,{
                     headers:{
                         authorization: `Bearer ${localStorage.getItem("token")  }`
                     }

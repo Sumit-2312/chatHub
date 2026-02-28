@@ -145,7 +145,7 @@ roomRouter.post("/deleteMember", async (req: any, res: any) => {
       return res.status(403).json({ message: "Only admins can remove members" });
     }
 
-    const isMember = room.members.some((id) => id.toString() === targetUser._id);
+    const isMember = room.members.some((id:any) => id.toString() === targetUser._id.toString());
     if (!isMember) {
       return res.status(400).json({ message: "User is not a member of this room" });
     }
@@ -190,7 +190,7 @@ roomRouter.post("/addMember", async (req: any, res: any) => {
     if (!room) {
       return res.status(400).json({ message: "Room not found" });
     }
-    const isAlreadyMember = room.members.some((id) => id.toString() === newMember._id);
+    const isAlreadyMember = room.members.some((id:any) => id.toString() === newMember._id.toString());
     if (isAlreadyMember) {
       return res.status(400).json({ message: "User already in the room" });
     }

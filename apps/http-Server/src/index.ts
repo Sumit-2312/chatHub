@@ -13,12 +13,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use("/auth", authRouter);
-
 //@ts-ignore
 app.get('/',(req,res)=>{
     res.send("Hello world");
 });
+
+app.use("/auth", authRouter);
+
 //@ts-ignore
 app.use('/user',verifyToken,userRouter); // working properly
 //@ts-ignore
@@ -26,9 +27,9 @@ app.use('/room',verifyToken,roomRouter);
 //@ts-ignore
 app.use('/chat',verifyToken,chatRouter);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT ;
 
-mongoose.connect(process.env.MONGO_URI || "")
+mongoose.connect(`${process.env.MONGO_URI}`)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

@@ -55,7 +55,7 @@ function ChatSection() {
   const handleRemoveFriend = async(email: string) => {
     // Logic to remove friend
     try{
-      const response = await axios.post('http://localhost:5000/user/removeFriend',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/user/removeFriend`,{
         friendEmail : email
       },{
         headers:{
@@ -76,7 +76,7 @@ function ChatSection() {
   const handleRemoveArchived = async(email: string) => {
     // Logic to remove archived chat
     try{
-      const response = await axios.post('http://localhost:5000/user/removeFromArchived',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/user/removeFromArchived`,{
         friendEmail: email
       },{
         headers:{
@@ -97,7 +97,7 @@ function ChatSection() {
   const handleRemoveChat = async(name: string) => {
     // Logic to remove chat
     try{
-      const response = await axios.post('http://localhost:5000/room/deleteRoom',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/deleteRoom`,{
         name
       },{
         headers:{
@@ -119,7 +119,7 @@ function ChatSection() {
   const handleRemoveFavourite = async(email: string) => {
     // Logic to remove favourite
     try{
-      const response = await axios.post('http://localhost:5000/user/removeFromFavourites',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/user/removeFromFavourites`,{
         friendEmail: email
     } ,{
       headers:{
@@ -141,7 +141,7 @@ function ChatSection() {
   const handleRemoveBlocked = async(email: string) => {
     // Logic to remove blocked user
     try{
-      const response = await axios.post('http://localhost:5000/user/removeFromBlocked',{
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/user/removeFromBlocked`,{
         friendEmail: email
       },{
         headers:{
