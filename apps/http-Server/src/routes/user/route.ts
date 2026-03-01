@@ -25,7 +25,7 @@ const user = await UserModel.findById(userId)
       path: "members",
       select: "_id username email profilePicture discription"
     },
-    select: "_id name members"
+    select: "_id type name members"
   })
   .populate({
     path: "archived",

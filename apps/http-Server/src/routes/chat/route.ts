@@ -21,17 +21,17 @@ const upload = multer({
 
 chatRouter.get('/', async (req: any, res: any) => {
   try {
-    const { roomName } = req.query;
+    const { roomId } = req.query;
     const userId = req.userId;
 
-    if (!roomName) {
-      return res.status(400).json({ message: "Room Name is required" });
+    if (!roomId) {
+      return res.status(400).json({ message: "Room ID is required" });
     }
     if( !userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const isRoom = await RoomModel.findOne({name:roomName});
+    const isRoom = await RoomModel.findOne({_id:roomId});
     if (!isRoom) {
       return res.status(404).json({ message: "Room not found" });
     }
@@ -117,6 +117,7 @@ chatRouter.get('/', async (req: any, res: any) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 // chatRouter.post('/upload', upload.single('file'), async (req: any, res: any) => {

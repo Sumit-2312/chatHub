@@ -40,16 +40,21 @@ roomRouter.post("/changeRoomName", async (req: any, res: any) => {
 roomRouter.post("/createRoom", async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { name, members } = req.body;
-    console.log("Creating room with name:", name, "and members:", members);
+    const { members, type, name } = req.body;
+    console.log("Creating room with members:", members, "and type:", type);
 
-    if (!name) return res.status(400).json({ message: "Room name is required" });
-
-    const existingRoom = await RoomModel.findOne({ name });
-    if (existingRoom) {
-      return res.status(400).json({ message: "Room with this name already exists" });
+    if( type === "private" && members.length !== 1) {
+      return res.status(400).json({ message: "Private rooms must have exactly 2 members (including the creator)" });
+    }
+    if( type === "group" && members.length < 2) {
+      return res.status(400).json({ message: "Group rooms must have at least 3 members (including the creator)" });
     }
 
+    if(type !== "private" && !name){
+      return res.status(400).json({ message: "Group rooms must have a name" });
+    }
+    else if( type === "private"){
+    }
     // Convert usernames to ObjectIds
     const memberDocs = await UserModel.find({
       _id: { $in: members }
@@ -63,8 +68,20 @@ roomRouter.post("/createRoom", async (req: any, res: any) => {
     const memberIds = memberDocs.map((user:any) => user._id.toString());
     console.log("Member IDs:", memberIds);
 
+    if( type === "private" ){
+      // check if a private room already exists between these two users
+        const existingRoom = await RoomModel.findOne({
+          type: "private",
+          members: { $all: [userId, memberIds[0]], $size: 2 }
+        });
+        
+        if (existingRoom) {
+          return res.status(200).json({ existed: true, message: "A private room already exists between these users", room: existingRoom });
+        }
+    }
+
     //  Add current user and remove duplicates
-    const allMembers = [...new Set([...memberIds, userId])];
+    const allMembers = [...new Set([...memberIds, userId])]; // add the creator and remove duplicates
     console.log("All Members IDs:", allMembers);
 
     //  Create room with valid ObjectIds only
@@ -72,6 +89,7 @@ roomRouter.post("/createRoom", async (req: any, res: any) => {
       name,
       members: allMembers,
       Admin: userId,
+      type: type 
     });
     console.log("New Room Document:", newRoomDoc);
 

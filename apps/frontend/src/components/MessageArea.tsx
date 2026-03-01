@@ -15,7 +15,6 @@ import websocketState from "../recoil states/websocket/websocket";
 import Allmessages from "../recoil states/messages/roomMessage";
 
 function MessageArea() {
-  const [SelectedRoomName, setSelectedRoomName] = useRecoilState(selectedChat);
   const [userDetails, setUserDetails] = useRecoilState(useDetalis);
   const [SelectedSidebar, setSelectedSidebar] = useRecoilState(SelectedState);
   const [SelectedRoomId, setSelectedRoomId] = useRecoilState(selectedChat);
@@ -24,7 +23,7 @@ function MessageArea() {
 
 
   const [messages, setMessages] = useRecoilState<any[]>(Allmessages);
-  const currentRoomName = useRef(SelectedRoomName);
+  const currentRoomId = useRef(SelectedRoomId);
   const currentMessages = useRef(messages);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -83,8 +82,8 @@ const handleAIResponse = (content: any) => {
 
 
   useEffect(() => {
-    currentRoomName.current = SelectedRoomName;
-  }, [SelectedRoomName]);
+    currentRoomId.current = SelectedRoomId;
+  }, [SelectedRoomId]);
 
     useEffect(() => {
     if (bottomRef.current) {
@@ -96,7 +95,7 @@ const handleAIResponse = (content: any) => {
   if (bottomRef.current) {
     bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }
-}, [SelectedRoomName]);
+}, [SelectedRoomId]);
 
 
 
@@ -131,17 +130,17 @@ const handleAIResponse = (content: any) => {
       Mtype = "AiChat";
       messageData = {
         type: Mtype,
-        roomName: SelectedRoomName,
+        roomId: SelectedRoomId,
         query: inputMessage.slice(3).trim(),
-        sender: userDetails.id
+        sender: userDetails._id
       };
     } else {
       messageData = {
         type: "chat",
         messageType: "text",
-        roomName: SelectedRoomName,
+        roomId: SelectedRoomId,
         message: inputMessage,
-        sender: userDetails.id
+        sender: userDetails._id
       };
     }
 
@@ -156,7 +155,7 @@ const handleAIResponse = (content: any) => {
         messageType: "text",
         content: inputMessage,
         sender: {
-          _id: userDetails.id,
+          _id: userDetails._id,
           username: userDetails.username,
           profilePicture: userDetails.profilePicture,
           discription: userDetails.discription
@@ -172,19 +171,34 @@ const handleAIResponse = (content: any) => {
   };
 
 
+  const currentRoom = userDetails.rooms.find(
+    (room: any) => room._id === SelectedRoomId
+  );
+  if (!currentRoom) { 
+    console.error("Current room not found in user details");
+    return null; 
+  }
+  let currentRoomName = currentRoom?.name || "Unknown Room";
+  if(currentRoom.type === "private"){
+    const otherMember = currentRoom.members.find((member: any) => member._id !== userDetails._id);
+    if(otherMember){
+      currentRoomName = otherMember.username;
+    }
+  }
+
 
 
 
   return (
     <div
       className={`${
-        SelectedRoomName && SelectedSidebar !== "Friends"
+        SelectedRoomId  && SelectedSidebar !== "Friends"
           ? "bg-[url('https://images.unsplash.com/photo-1547499417-60eebaaf9854?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0')] bg-zinc-800"
           : "bg-black"
       } h-screen w-full bg-no-repeat bg-cover bg-center text-black flex flex-col`}
     >
 
-      {SelectedRoomName && SelectedSidebar !== "Friends" && (
+      {SelectedRoomId && SelectedSidebar !== "Friends" && (
         <div className="flex items-center justify-between px-4 h-14 bg-zinc-800 text-white shadow-sm">
           <div className="flex items-center space-x-3">
             <img
@@ -193,7 +207,7 @@ const handleAIResponse = (content: any) => {
               className="w-9 h-9 rounded-full"
             />
             <div>
-              <div className="font-medium">{SelectedRoomName}</div>
+              <div className="font-medium">{currentRoomName}</div>
               <div className="text-xs text-gray-400">online</div>
             </div>
           </div>
@@ -201,7 +215,7 @@ const handleAIResponse = (content: any) => {
       )}
 
       {/* Chat Section */}
-      {SelectedRoomName === "" && SelectedSidebar === "Friends" ? (
+      {SelectedRoomId === "" && SelectedSidebar === "Friends" ? (
         <div className="flex items-center justify-center h-full text-gray-600 font-semibold">
           <div className="text-lg">Select a chat to start messaging</div>
         </div>
@@ -214,7 +228,7 @@ const handleAIResponse = (content: any) => {
           ) : (
             messages.map((message, index) => {
               const isCurrentUser =
-                message.sender && userDetails.id === message.sender._id;
+                message.sender && userDetails._id === message.sender._id;
               const senderName =
                 message.senderType === "AI"
                   ? "AI Assistant"
@@ -265,7 +279,7 @@ const handleAIResponse = (content: any) => {
     
 
       {/* Input Area */}
-      {SelectedRoomName !== "" && SelectedSidebar !== "Friends" && (
+      {SelectedRoomId !== "" && SelectedSidebar !== "Friends" && (
         <div className="flex items-center px-5 py-2 bg-white border-t gap-5">
           <FaSmile className="text-xl text-gray-500 cursor-pointer" />
 

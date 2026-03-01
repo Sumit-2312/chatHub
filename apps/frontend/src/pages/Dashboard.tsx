@@ -29,13 +29,13 @@ function Dashboard() {
     const [OpenGroupModal, setOpenGroupModal] = useRecoilState(AddGroupModal);
     const [OpenSettingModal, setOpenSettingModal] = useRecoilState(SettingModalState);
     const [ws,setWs] = useRecoilState(websocketState);
-    const currentRoomName = useRecoilValue(selectedChat);
+    const currentRoomId = useRecoilValue(selectedChat);
     const [messages,setMessages] = useRecoilState<any[]>(Allmessages);
 
-    const currentRoomRef = useRef(currentRoomName);
+    const currentRoomRef = useRef(currentRoomId);
     const userRef = useRef(userDtls);
 
-    useEffect(() => { currentRoomRef.current = currentRoomName; }, [currentRoomName]);
+    useEffect(() => { currentRoomRef.current = currentRoomId; }, [currentRoomId]);
     useEffect(() => { userRef.current = userDtls }, [userDtls]);
 
 
@@ -58,15 +58,15 @@ function Dashboard() {
                     const data = JSON.parse(event.data);
                     console.log("Received message from websocket:", data);
 
-                    if (data.messageType === "text" && data.roomName === currentRoomRef.current) {
-                        if(data.sender != userRef.current.id ){
-                            console.log("MEssages are updated");
+                    if (data.messageType === "text" && data.roomId === currentRoomRef.current) {
+                        if(data.sender != userRef.current._id ){
+                            console.log("Messages are updated");
                             setMessages((prev) => [...prev, data]);
                         }
                     } else if (data.type === "joinedRoom" || data.type === "leftRoom") {
                         toast.success(
                             `You have ${data.type === "joinedRoom" ? "joined" : "left"} ${
-                                data.roomName
+                                data.roomId
                             }`
                         );
                     } else if (data.type === "error") {
@@ -118,7 +118,7 @@ function Dashboard() {
                 }
                 // set the atom state of user details 
                 setUserDetails({
-                    id: response.data.user._id,
+                    _id: response.data.user._id,
                     username: response.data.user.username,  
                     email: response.data.user.email,
                     profilePicture: response.data.user.profilePicture,

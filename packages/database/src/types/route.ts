@@ -28,8 +28,9 @@ export interface IUser extends Document {
 }
 
 export interface IRoom extends Document {
-  name: string;
+  name?: string;
   members: Types.ObjectId[];
   isGroup: boolean;
   Admin: Types.ObjectId;
+  type: "private" | "group";
 }

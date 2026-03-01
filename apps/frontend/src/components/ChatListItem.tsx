@@ -11,6 +11,7 @@ import Allmessages from "../recoil states/messages/roomMessage";
 
 
 interface Props {
+  id?: string;
   name: string;
   email?: string;
   profilePicture?: string;
@@ -22,8 +23,10 @@ interface Props {
 }
 
 
-function ChatListItem({onRemove,onChat, name,category, email, profilePicture, description, isOnline }: Props) {
 
+function ChatListItem({onRemove,onChat,id, name,category, email, profilePicture, description, isOnline }: Props) {
+
+  console.log("props got : ", {onRemove,onChat,id, name,category, email, profilePicture, description, isOnline});
 
   const [SelectedChat,setSelectedChat] = useRecoilState(selectedChat);
   const [clicked,setClicked] = useState(false);
@@ -33,8 +36,9 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
     const fetchMessages = async () => {
       try {
         console.log("Trying to fetch messages for room: ", name);
+        console.log("roomId (id): "  , id);
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/chat/`, {
-          params: { roomName: name },
+          params: { roomId: id },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
   
@@ -54,22 +58,23 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
       }
     };
   
-
-  const joinWebSocketRoom = ()=>{
+  const joinWebSocketRoom = (ws: WebSocket | null)=>{
       if( ws && ws.readyState === WebSocket.OPEN ){
-        ws.send( JSON.stringify({ type: "joinRoom", roomName: name }) );
-        console.log(`Sent joinRoom request for room: ${name}`);
+        ws.send( JSON.stringify({ type: "joinRoom", roomId: id }) );
+        console.log(`Sent joinRoom request for room: ${name} with roomId: ${id}`);
       }
       else {
         console.log("Failed to join room, WebSocket not connected");
       }
   }
 
+
+
   const  handleClicked = async ()=>{
-    setSelectedChat(name ?? "");
+    setSelectedChat(id || "");
     if( category === 'Chats' ){
       // we also need to join the websocket room here
-      joinWebSocketRoom();
+      joinWebSocketRoom(ws);
       await fetchMessages();
       console.log("Fetched the messages for the selected chat room");
     }
@@ -77,7 +82,7 @@ function ChatListItem({onRemove,onChat, name,category, email, profilePicture, de
 
 
   return (
-  <div onMouseLeave={()=>setClicked(false)} onClick={handleClicked} className={` ${SelectedChat === name ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group `}>
+  <div onMouseLeave={()=>setClicked(false)} onClick={handleClicked} className={` ${SelectedChat === id ? "bg-gray-900":""} flex items-center gap-4 p-3 justify-between pr-10 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors duration-200 group `}>
       
       <div className="flex items-center gap-3">
         <div className="relative">

@@ -11,6 +11,7 @@ import AddGroupModal from "../recoil states/modals/AddGroupModal";
 import axios from "axios";
 import toast from "react-hot-toast";
 import selectedChat from "../recoil states/chat/selectedChat";
+import websocketState from "../recoil states/websocket/websocket";
 
 function ChatSection() {
   const [Selected] = useRecoilState(SelectedState);
@@ -22,6 +23,20 @@ function ChatSection() {
   const [userDetails, setUserDetails] = useRecoilState(useDetalis);
   const [Chat, setChat] = useRecoilState(selectedChat);
   const [Sidebar,setSidebar] = useRecoilState(SelectedState);
+  const [ws, setWs] = useRecoilState<WebSocket | null>(websocketState);
+
+
+
+  const joinWebSocketRoom = (ws: WebSocket | null, roomId: string)=>{
+    console.log(`Attempting to join WebSocket room: ${roomId}`);
+      if( ws && ws.readyState === WebSocket.OPEN ){
+        ws.send( JSON.stringify({ type: "joinRoom", roomId: roomId }) );
+        console.log(`Sent joinRoom request for room: ${roomId}`);
+      }
+      else {
+        console.log("Failed to join room, WebSocket not connected");
+      }
+  }
 
   const handleMouseMove = (e: MouseEvent) => {
     if (resizing) {
@@ -158,32 +173,49 @@ function ChatSection() {
     }
   };
 
-  const handleChatWithFriend = async(id: string,name:string) => {
+  const handleChatWithFriend = async(id: string) => {
     // Logic to start chat with friend
+    console.log("Starting chat with friend ID:", id);
     try{
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/createRoom`,{
-        name,
-        members:[id]
+        members:[id],
+        type: "private"
       },{
         headers:{
           Authorization : `Bearer ${localStorage.getItem('token')}`
         }
       })
-
+      let roomName = response.data.room.name;
+      // console.log("Chat Room Response while creating chat with friend :", response.data);
+      // console.log("User's friends", userDetails.friends);
+      // console.log("roomType: ", response.data.room.type);
+      if( response.data.room.type === "private"){
+        roomName = userDetails.friends.find(friend => friend._id === id)?.username || "Chat";
+        const existingRoom = response.data.existed;
+        if(existingRoom){
+          const roomId = response.data.room._id;
+          setChat(roomId);
+          setSidebar("Chats");
+          joinWebSocketRoom(ws, roomId);
+          return;
+        }
+      }
+      console.log("Final Room Name:", roomName);
       setUserDetails(prev=>({
         ...prev,
         rooms: [
           ...prev.rooms,
           {
-            id: response.data.room._id,
-            name: response.data.room.name,
-            member: response.data.room.members 
+            type: response.data.type,
+            _id: response.data.room._id,
+            name: roomName ,
+            members: response.data.room.members 
           }
         ]
       }))
 
       setSidebar("Chats");
-      setChat(response.data.room.name);
+      setChat(response.data.room._id);
     }catch(err:any){
       toast.error(err.response.data.message || "An error occurred while starting chat");
     }
@@ -253,15 +285,15 @@ function ChatSection() {
 
           <div className="bottom scrollbar-hide w-full px-8 flex flex-col gap-2 overflow-y-auto h-full">
             {Selected === "Friends" && ( userDetail.friends.length === 0 ||
-              userDetail.friends[0].id === "" ? (
+              userDetail.friends[0]._id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No friends found</div>
               ) :
               userDetail.friends?.map((friend:any) => (
                 <ChatListItem
                   onRemove={() => handleRemoveFriend(friend.email)}
-                  onChat={() => handleChatWithFriend(friend._id,friend.username)}
+                  onChat={() => handleChatWithFriend(friend._id)}
                   category='Friends'
-                  key={friend.id}
+                  id={friend.id}
                   name={friend.username}
                   email={friend.email}
                   profilePicture={friend.profilePicture}
@@ -271,22 +303,43 @@ function ChatSection() {
               )))}
 
             {Selected === "Chats" &&( userDetail.rooms.length === 0 ||
-               userDetail.rooms[0].id === "" ? (
+               userDetail.rooms[0]._id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No Chats found</div>
-              ) :
-              userDetail.rooms?.map((chat) => (
-                <ChatListItem onRemove={()=>handleRemoveChat(chat.name)} category='Chats' key={chat.id} name={chat.name} />
-              )))}
+              ) :(
+                  userDetail.rooms?.map((chat) => {
+                    console.log("Rendering chat: ", chat);
+                    //@ts-ignore
+                    console.log("chat id: ", chat._id);
+                    if(chat.type === "private") {
+                      const otherMember = chat.members.find((m:any) => m._id !== userDetail._id);
+                      //@ts-ignore
+                      const roomName = userDetail.friends.find(f => f._id === otherMember?._id)?.username || "Chat";
+                      return <ChatListItem 
+                          onRemove={() => handleRemoveChat(chat.name)} 
+                          category='Chats'
+                          //@ts-ignore 
+                          id={chat._id} 
+                          name={roomName} 
+                      />;
+                    }
+                    return <ChatListItem 
+                        onRemove={() => handleRemoveChat(chat.name)} 
+                        category='Chats' 
+                        id={chat._id} 
+                        name={chat.name} 
+                    />;
+                  })
+              ))}
 
             {Selected === "Archieve" &&( userDetail.archived.length === 0 ||
-              userDetail.archived[0].id === "" ? (
+              userDetail.archived[0]._id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No archived chats</div>
               ) :
               userDetail.archived?.map((arch) => (
                 <ChatListItem
                   onRemove={()=>handleRemoveArchived(arch.email)}
                   category='Archived'
-                  key={arch.id}
+                  id={arch._id}
                   name={arch.username}
                   email={arch.email}
                   profilePicture={arch.profilePicture}
@@ -296,14 +349,14 @@ function ChatSection() {
               }
 
             {Selected === "Favourites" && ( userDetail.favourites.length === 0 ||
-                userDetail.favourites[0].id === "" ? (
+                userDetail.favourites[0]._id === "" ? (
                   <div className="text-center text-white mt-10 font-bold text-2xl">No favourites found</div>
                 ) :
                 userDetail.favourites?.map((fav) => (
                   <ChatListItem
                     onRemove={()=>handleRemoveFavourite(fav.email)}
                     category='Favourites'
-                    key={fav.id}
+                    id={fav._id}
                     name={fav.username}
                     email={fav.email}
                     profilePicture={fav.profilePicture}
@@ -314,14 +367,14 @@ function ChatSection() {
             }
 
             {Selected === "Blocked" &&
-             ( userDetail.blocked.length === 0 || userDetail.blocked[0].id === "" ? (
+             ( userDetail.blocked.length === 0 || userDetail.blocked[0]._id === "" ? (
                 <div className="text-center text-white mt-10 font-bold text-2xl">No blocked users</div>
               ) :
               userDetail.blocked?.map((block) => (
                 <ChatListItem
                   onRemove={()=>handleRemoveBlocked(block.email)}
                   category='Blocked'
-                  key={block.id}
+                  id={block._id}
                   name={block.username}
                   email={block.email}
                   profilePicture={block.profilePicture}

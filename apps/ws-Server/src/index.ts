@@ -103,9 +103,10 @@ server.on("connection", async (ws: WebSocket, req: any) => {
       // on message is triggered when the client sends a message
       // we broadcast the message to all the clients with handler function
       await Handler(data, userId, clients);  // userId here indicates the user who recieves the message
+      console.log("Message handled successfully for user:", userId);
 
     } catch (err) {
-
+      console.log("Error in message handler:", err);
       console.error("Message parse error:", err);
       ws.send(JSON.stringify({ type: "error", message: "error from index.ts file in catch block format",err:err }));
 

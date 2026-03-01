@@ -49,10 +49,17 @@ const RoomSchema = new Schema<IRoom>(
     name: {
       type: String,
       unique: true,
-      required: [true, "Room name is required"]
+      required: function(){
+        return (this as any).type === "group"; // Name is required for group chats, optional for private chats
+      }
     },
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    Admin: { type: Schema.Types.ObjectId, ref: "User", required: true }
+    Admin: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    type: {
+      type: String,
+      enum: ["private", "group"],
+      required: true
+    }
   },
   { timestamps: true }
 );

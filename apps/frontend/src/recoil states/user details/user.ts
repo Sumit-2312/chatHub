@@ -3,21 +3,22 @@ import { atom } from "recoil";
 export const useDetalis = atom({
     key:"userDetails",
     default: {
-        id: "",
+        _id: "",
         username: "",
         email: "",
         profilePicture: "", 
         friends: [{
-            id: "1",
+            _id: "1",
             username:"Sumit",
             email: "sumitsongh@gmail.com",
-            profilePicture: "",
+            pro_filePicture: "",
             discription: "Hi i am using ChatHub!"
         }],
         rooms: [{
-            id: "1",
+            _id: "1",
+            type: "private",
             name:"Sumit",
-            member:[{
+            members:[{
             id: "1",
             username:"Sumit",
             email: "sumitsongh@gmail.com",
@@ -26,21 +27,21 @@ export const useDetalis = atom({
         }]
         }],
         archived: [{
-            id: "",
+            _id: "",
             username:"",
             email: "",
             profilePicture: "",
             discription: ""
         }],
         blocked: [{
-            id: "",
+            _id: "",
             username:"",
             email: "",
             profilePicture: "",
             discription: ""
         }],
         favourites: [{
-            id: "",
+            _id: "",
             username:"",
             email: "",
             profilePicture: "",
