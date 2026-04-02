@@ -143,7 +143,7 @@ function Dashboard() {
 
 
   return (
-    <div className="flex   w-screen h-screen overflow-hidden bg-black">
+    <div className="flex w-[100vw] overflow-hidden h-screen bg-black">
         <Sidebar/>
         <AnimatePresence mode="wait">
             {Open && <ChatSection key="friends" />}

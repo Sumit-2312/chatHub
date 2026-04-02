@@ -16,7 +16,7 @@ import websocketState from "../recoil states/websocket/websocket";
 function ChatSection() {
   const [Selected] = useRecoilState(SelectedState);
   const [userDetail] = useRecoilState(useDetalis);
-  const [resizing, setResizing] = useState(false);
+  // const [resizing, setResizing] = useState(false);
   const [width, setWidth] = useState(420);
   const [FriendModal, setFriendModal ] = useRecoilState(AddFriendModal);
   const [GroupModal, setGroupModal ] = useRecoilState(AddGroupModal);
@@ -221,35 +221,30 @@ function ChatSection() {
     }
   };
 
-  useEffect(() => {
-    if (resizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    }
+  // useEffect(() => {
+  //   if (resizing) {
+  //     document.addEventListener("mousemove", handleMouseMove);
+  //     document.addEventListener("mouseup", handleMouseUp);
+  //   }
 
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.userSelect = "";
-    };
-  }, [resizing]);
+  //   return () => {
+  //     document.removeEventListener("mousemove", handleMouseMove);
+  //     document.removeEventListener("mouseup", handleMouseUp);
+  //     document.body.style.userSelect = "";
+  //   };
+  // }, [resizing]);
 
   return (
-    <div className="relative h-full flex-none z-30" style={{ width: `${width}px` }}>
+    <div className="relative sm:w-[80%] md:w-[25%] h-full flex-none " >
 
       <div
         onMouseDown={handleMouseDown}
-        className={` ${resizing? "bg-blue-100" : ""} w-1 h-full hover:cursor-col-resize hover:bg-blue-100 absolute right-0 top-0 z-10`}
+        className={`w-1 h-full hover:cursor-col-resize hover:bg-blue-100 absolute right-0 top-0 z-10`}
       ></div>
 
 
         <motion.div
-          initial={{ width: 0, opacity: 0 }}
-          animate={!resizing ? { width: width, opacity: 1 } : false}
-          exit={{ width: 0, opacity: 0, transition: { duration: 0.5 } }}
-          transition={!resizing ? { duration: 0.4, ease: "easeInOut" } : { duration: 0 }}
-          className="flex-none h-screen shrink-0 relative bg-gray-950 flex flex-col gap-5 items-center justify-start overflow-hidden text-white py-5"
-          style={{ width: `${width}px` }}
+          className="h-screen w-full relative bg-gray-950 flex flex-col gap-5 items-center justify-start overflow-hidden text-white py-5"
         >
 
           <div className="top flex items-center justify-between w-full border-b px-10 pb-5 border-blue-950 text-white">
@@ -275,7 +270,7 @@ function ChatSection() {
             )}
           </div>
 
-          <div className="middle w-full px-10">
+          <div className="middle  w-full px-10">
             <input
               type="text"
               placeholder="Search"
