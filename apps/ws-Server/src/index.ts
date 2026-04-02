@@ -44,10 +44,15 @@ subscriber.subscribe("chatRoom",(message)=>{
   const data = JSON.parse(message);
   console.log("Received message from Redis Pub/Sub:", data);
   console.log("message to be sent on frontend" , data.content);
-  console.log("logging client before sending message ", clients);
+  console.log("logging client before sending message ");
+  clients.forEach((client)=>{
+    console.log(`clientid: ${client.userId} \n roomId: ${client.rooms}`)
+  })
+
   clients.forEach((client)=>{
     console.log("trying to send message for client: ",client.userId);
-    if( client.rooms.includes(data.roomId) && client.ws.readyState === WebSocket.OPEN && (client.userId != data.content.sender || data.content.senderType =='AI' )){
+    console.log("sender id: ", data.content.sender._id);
+    if( client.rooms.includes(data.roomId) && client.ws.readyState === WebSocket.OPEN && (client.userId != data.content.sender._id || data.content.senderType =='AI' )){
       console.log("sending message to client with id: ", client.userId);
       client.ws.send(JSON.stringify(data.content))
     }

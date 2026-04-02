@@ -13,6 +13,7 @@ import { useDetalis } from "../recoil states/user details/user";
 import { SelectedState } from "../recoil states/sidebar/sidebar";
 import websocketState from "../recoil states/websocket/websocket";
 import Allmessages from "../recoil states/messages/roomMessage";
+import { input } from "motion/react-client";
 
 function MessageArea() {
   const [userDetails, setUserDetails] = useRecoilState(useDetalis);
@@ -146,26 +147,30 @@ const handleAIResponse = (content: any) => {
 
     ws.send(JSON.stringify(messageData));
     console.log("Sent message from the frontend side:", messageData);
-    toast.loading("Wait AI will respond soon!");
+    if(Mtype == "AiChat") toast.loading("Wait AI will respond soon!");
 
-    if(Mtype === "chat"){
-      setMessages((prev) => [
-      ...prev,
-      {
-        messageType: "text",
-        content: inputMessage,
-        sender: {
-          _id: userDetails._id,
-          username: userDetails.username,
-          profilePicture: userDetails.profilePicture,
-          discription: userDetails.discription
-        },
-        senderType: "user",
-        createdAt: new Date().toISOString(),
-        ChatRoomId: SelectedRoomId
-      }
-    ]);
-    }
+      setMessages((prev) =>{ 
+          let message = inputMessage;
+          if( inputMessage.startsWith("@ai")){
+             message = inputMessage.split("@ai")[1];
+          }
+        return [
+          ...prev,
+          {
+            messageType: "text",
+            content: message,
+            sender: {
+              _id: userDetails._id,
+              username: userDetails.username,
+              profilePicture: userDetails.profilePicture,
+              discription: userDetails.discription
+            },
+            senderType: "user",
+            createdAt: new Date().toISOString(),
+            ChatRoomId: SelectedRoomId
+          }]
+      });
+  
 
     setInputMessage("");
   };
