@@ -235,7 +235,7 @@ function ChatSection() {
   }, [resizing]);
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full flex-none z-30" style={{ width: `${width}px` }}>
 
       <div
         onMouseDown={handleMouseDown}
@@ -248,7 +248,7 @@ function ChatSection() {
           animate={!resizing ? { width: width, opacity: 1 } : false}
           exit={{ width: 0, opacity: 0, transition: { duration: 0.5 } }}
           transition={!resizing ? { duration: 0.4, ease: "easeInOut" } : { duration: 0 }}
-          className="h-screen relative bg-gray-950 flex flex-col gap-5 items-center justify-start overflow-hidden text-white py-5"
+          className="flex-none h-screen shrink-0 relative bg-gray-950 flex flex-col gap-5 items-center justify-start overflow-hidden text-white py-5"
           style={{ width: `${width}px` }}
         >
 

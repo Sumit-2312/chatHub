@@ -191,11 +191,11 @@ const handleAIResponse = (content: any) => {
 
   return (
     <div
-      className={`${
+      className={` z-10 flex-1 ${
         SelectedRoomId  && SelectedSidebar !== "Friends"
           ? "bg-[url('https://images.unsplash.com/photo-1547499417-60eebaaf9854?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0')] bg-zinc-800"
           : "bg-black"
-      } h-screen w-full bg-no-repeat bg-cover bg-center text-black flex flex-col`}
+      } h-screen bg-no-repeat bg-cover bg-center text-black flex flex-col`}
     >
 
       {SelectedRoomId && SelectedSidebar !== "Friends" && (
