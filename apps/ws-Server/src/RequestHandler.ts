@@ -26,23 +26,10 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                 const client = clients.find((c) => c.userId === userId);
                 if (!client) return;
 
-                // If already in a room, automatically leave it
-                if (client.rooms.length > 0) {
-                    const previousRoom = client.rooms[0];
-                    if( previousRoom != data.roomId){
-                        client.rooms = [];
-                        client.rooms = [data.roomId];
-                        ws.send(JSON.stringify({ type: "joinedRoom", roomId: data.roomId }));
-                        console.log(`User ${userId} switched from room ${previousRoom} to room ${data.roomId}`);
-                        return;
-                    }
-                }
-                else{
                     client.rooms = [data.roomId];
+                    console.log(`user: ${userId} joined the room ${data.roomId}`);
                     ws.send(JSON.stringify({ type: "joinedRoom", roomId: data.roomId }));
-                    console.log(`User ${userId} joined room ${data.roomId}`);
-                    return;
-                }
+                    console.log(`User ${userId} joined room ${data.roomId}`);                
             }
 
 
@@ -84,12 +71,16 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                         ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
                         return;
                     };
+                    if(!room){
+                        ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
+                        return;
+                    }
                     //@ts-ignore
                     const newMessage = await Message.create({
                         ChatRoomId: roomId,
                         sender: userId,
                         messageType: data.messageType,
-                        content: data.message,            
+                        content: message,            
                         senderType: "user"                
                     });
 
@@ -161,22 +152,20 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
                     senderType: 'AI'
                 });
 
-                const aiMessage = await aiMsg.populate('sender','_id username email profilePicture discription');
+                // const aiMessage = await aiMsg.populate('sender','_id username email profilePicture discription');
 
-                console.log("AI Response stored in database:", aiMessage);
+                console.log("AI Response stored in database:", aiMsg);
                 // Publish AI response to the chat room
                 await publisher.publish("chatRoom", JSON.stringify({
                     roomId: data.roomId,
                     content: {
                         ...newMessage.toObject(),
-                        roomId: data.roomId
                     }
                 }));   
                 await publisher.publish("chatRoom", JSON.stringify({
                     roomId: data.roomId,
                     content : {
-                        ...aiMessage.toObject(),
-                        roomId: data.roomId
+                        ...aiMsg.toObject(),
                     }
                 }));   
             }

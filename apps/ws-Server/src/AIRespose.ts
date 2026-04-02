@@ -23,6 +23,7 @@ const schema = {
 const history: Record<string,any[]> = {};
 
 export const generate = async (query: string,userId: string): Promise<any> => {
+  console.log("Generate function called for ai message");
   try {
     const instruction = ` 
                   You are an expert in each field ( fullStack , coding , psychology).

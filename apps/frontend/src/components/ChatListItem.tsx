@@ -72,6 +72,7 @@ function ChatListItem({onRemove,onChat,id, name,category, email, profilePicture,
 
   const  handleClicked = async ()=>{
     setSelectedChat(id || "");
+    console.log("chat room selected: ",selectedChat);
     if( category === 'Chats' ){
       // we also need to join the websocket room here
       joinWebSocketRoom(ws);

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { FaSmile, FaMicrophone, FaPaperclip } from "react-icons/fa";
+import { useEffect, useState, useRef } from "react";
+import { FaSmile, FaPaperclip } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { useRecoilState } from "recoil";
 import toast from "react-hot-toast";
