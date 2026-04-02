@@ -56,9 +56,10 @@ function Dashboard() {
                 // setting up the onMEssage handler
                 socket.onmessage = (event) => {
                     const data = JSON.parse(event.data);
+                    const roomId = data.ChatRoomId;
                     console.log("Received message from websocket:", data);
-
-                    if (data.messageType === "text" && data.roomId === currentRoomRef.current) {
+                    console.log(`current room: ${currentRoomRef.current} \n room for which msg is recieved from ws: ${roomId}`)
+                    if (data.messageType === "text" && roomId === currentRoomRef.current) {
                         if(data.sender != userRef.current._id ){
                             console.log("Messages are updated");
                             setMessages((prev) => [...prev, data]);

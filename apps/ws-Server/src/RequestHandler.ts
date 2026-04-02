@@ -86,16 +86,17 @@ export default async function Handler(data:any,userId:string,clients:ClientInter
 
 
                     console.log("Message stored in database:", newMessage);
+                    const msgTosend = await newMessage.populate("sender","_id username discription email")
                     console.log("Message sent to publisher:", {
                         type: 'chat',
                         messageType: data.messageType,
                         roomId: data.roomId,
-                        message: newMessage.toObject()
+                        message: msgTosend.toObject()
                     });
                     await publisher.publish("chatRoom", JSON.stringify({
                         roomId: data.roomId,
                         content:{
-                            ...newMessage.toObject(),
+                            ...msgTosend.toObject(),
                         }
                     }));
                 }
