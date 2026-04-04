@@ -13,7 +13,6 @@ import { useDetalis } from "../recoil states/user details/user";
 import { SelectedState } from "../recoil states/sidebar/sidebar";
 import websocketState from "../recoil states/websocket/websocket";
 import Allmessages from "../recoil states/messages/roomMessage";
-import { input } from "motion/react-client";
 
 function MessageArea() {
   const [userDetails, setUserDetails] = useRecoilState(useDetalis);
@@ -31,53 +30,83 @@ function MessageArea() {
 
 
 const handleAIResponse = (content: any) => {
-   let data = "";
-   try{
-    data = JSON.parse(content);
-   }
-   catch{
-    data = content;
-   }
+    let data = "";
+    try {
+      data = JSON.parse(content);
+    } catch {
+      data = content;
+    }
 
-  if (Array.isArray(data)) {
-    return data.map((item, i) => (
-      <div key={i} className="mb-4 p-2">
-        {item.type === "theory" ? (
+    const markdownComponents = {
+      h1: ({ node, ...props }) => (
+        <h1 className="text-2xl font-bold my-2 text-black" {...props} />
+      ),
+      h2: ({ node, ...props }) => (
+        <h2 className="text-xl font-semibold my-2 text-black" {...props} />
+      ),
+      h3: ({ node, ...props }) => (
+        <h3 className="text-lg font-semibold my-1 text-black" {...props} />
+      ),
+      p: ({ node, ...props }) => (
+        <p className="text-sm leading-relaxed text-black" {...props} />
+      ),
+      code({ inline, className, children, ...props }: any) {
+        return !inline ? (
+          <pre className="bg-[#000000] text-white p-3 rounded-md overflow-x-auto">
+            <code className={className} {...props}>
+              {children}
+            </code>
+          </pre>
+        ) : (
+          <code className="bg-blue-700 px-1 py-0.5 rounded text-sm">
+            {children}
+          </code>
+        );
+      },
+    };
 
-            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-              {item.content}
-            </ReactMarkdown>
-
-        ) : item.type === "code" ? (
-          <div className="relative bg-[#0d1117] text-black rounded-lg p-3 border border-gray-700 mt-3">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(item.content);
-                toast.success("Code copied!");
-              }}
-              className="absolute top-0 right-0 text-xs px-2 py-1 font-bold rounded-md text-white"
-            >
-              Copy
-            </button>
+    if (Array.isArray(data)) {
+      return data.map((item, i) => (
+        <div key={i} className="mb-4 p-2">
+          {item.type === "theory" ? (
             <ReactMarkdown
               rehypePlugins={[rehypeHighlight]}
+              components={markdownComponents}
             >
               {item.content}
             </ReactMarkdown>
-          </div>
-        ) : null}
-      </div>
-    ));
-  }
+          ) : item.type === "code" ? (
+            <div className="relative mt-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(item.content);
+                  toast.success("Code copied!");
+                }}
+                className="absolute top-1 right-2 text-xs px-2 py-1 font-bold rounded-md text-white bg-gray-700"
+              >
+                Copy
+              </button>
 
-  // fallback for single text content
-  return (
-    <ReactMarkdown
-      rehypePlugins={[rehypeHighlight]}
-    >
-      {content}
-    </ReactMarkdown>
-  );
+              <ReactMarkdown
+                rehypePlugins={[rehypeHighlight]}
+                components={markdownComponents}
+              >
+                {item.content}
+              </ReactMarkdown>
+            </div>
+          ) : null}
+        </div>
+      ));
+    }
+
+    return (
+      <ReactMarkdown
+        rehypePlugins={[rehypeHighlight]}
+        components={markdownComponents}
+      >
+        {content}
+      </ReactMarkdown>
+    );
 };
 
 
