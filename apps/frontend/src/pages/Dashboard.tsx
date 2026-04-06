@@ -41,7 +41,8 @@ function Dashboard() {
 
     useEffect(()=>{
         const token = localStorage.getItem("token");
-        if( !token ) navigate('/login');
+
+        if( !token || token == "" ) navigate('/login');
         else{
             const socket = new WebSocket(`ws://localhost:8080?token=${localStorage.getItem("token")}`);
 

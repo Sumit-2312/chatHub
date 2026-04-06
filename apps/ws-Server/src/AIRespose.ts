@@ -65,9 +65,9 @@ export const generate = async (query: string,userId: string): Promise<any> => {
         systemInstruction: instruction,
         responseMimeType: "application/json",
         responseSchema: schema,
-        temperature: 0.7,
-        maxOutputTokens: 800,
-        thinkingConfig: { thinkingBudget: 0 }
+        temperature: 0.7, // Adjust for creativity (0.0 = deterministic, 1.0 = creative)
+        // maxOutputTokens: 800, // Limit response length , if not used then it will generate response until it reaches the end of the content or max token limit of the model
+        thinkingConfig: { thinkingBudget: 0 } // Disable thinking time for faster responses, can vary from 0 to 10000 ms, higher values may improve response quality but increase latency
       }
     });
 
@@ -77,15 +77,26 @@ export const generate = async (query: string,userId: string): Promise<any> => {
       parsed = JSON.parse(response.text || "[]");
     } catch(error) {
       console.log(error);
-      parsed = response.text;
+      parsed = "";
     }
 
+    if( parsed == ""){
+      throw new Error("some error occurend while parsing the message");
+    }
     history[userId].push({role:"model",parts:[{text:JSON.stringify(parsed)}]});
 
     console.log("Gemini API Structured Output:", parsed);
     return parsed;
   } catch (error) {
     console.log("Gemini API Error:", error);
+    if(error instanceof Error && error.message === "some error occurend while parsing the message"){
+      return [
+        {
+          type: "theory",
+          content: "Sorry, some problem occured while parsing message for you"
+        }
+      ];
+    }
     return [
       {
         type: "theory",
